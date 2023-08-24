@@ -3,6 +3,7 @@
 #include<string>
 #include<fstream>
 #include<vector>
+#include <iomanip>
 #include "struct.h"
 double strTodouble(std::string& str){
     double num=0;
@@ -154,6 +155,7 @@ void readRadarData(const std::string& RadarDataPath,std::vector<Radar>& RadarDat
     }
 
     std::string line;
+    std::getline(inputFile, line);
     while (std::getline(inputFile, line)) { // 逐行读取文件内容
         Radar data;
         int index=0;
@@ -209,7 +211,39 @@ void readRadarData(const std::string& RadarDataPath,std::vector<Radar>& RadarDat
         buff.clear();
         // std::cout<<line<<std::endl;
         // data.print();
+        RadarData.push_back(data);
+        
 
     }
     inputFile.close();
+}
+void wirteResult(const std::string& Path,std::vector<res>& Result){
+     std::ofstream outFile; // 创建一个输出文件流对象
+
+    // 打开文件，如果文件不存在则创建
+    outFile.open(Path);
+
+    if (!outFile) {
+        std::cerr << "无法打开文件！" << std::endl;
+        return ;
+    }
+    for(auto& re:Result){
+        outFile<<std::fixed << std::setprecision(3)<<re.Timestamp<<",";
+        outFile<<re.Object_ID<<",";
+        outFile<<re.Object_DistLong<<",";
+        outFile<<re.Object_DistLat<<",";
+        outFile<<re.Object_VeloLong<<",";
+        outFile<<re.Object_VeloLat<<",";
+        outFile<<re.Object_RCS<<",";
+        outFile<<re.Object_Class<<",";
+        outFile<<std::fixed << std::setprecision(11)<<re.Object_Longitude<<",";
+        outFile<<re.Object_Latitude<<",";
+        outFile<<re.Object_Altitude<<",";
+        outFile<<re.Object_parking<<",";
+        outFile<<re.Object_retrograde<<",";
+        outFile<<re.Object_overspeed;
+        outFile<<std::endl;
+    }
+    // 关闭文件流
+    outFile.close();
 }

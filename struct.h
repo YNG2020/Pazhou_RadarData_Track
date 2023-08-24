@@ -1,4 +1,5 @@
 #include<iostream>
+#include<string>
 struct rtk{        
     unsigned long Week;
     double Seconds;
@@ -33,4 +34,20 @@ struct Radar{
             timestamp,ID,DistLong,DistLat,VeloRadial,RCS
         );
     }       
+};
+struct res{
+    double Timestamp;
+    unsigned long Object_ID;
+    double Object_DistLong;
+    double Object_DistLat;
+    double Object_VeloLong;
+    double Object_VeloLat;
+    double Object_RCS;
+    int Object_Class;
+    double Object_Longitude;
+    double Object_Latitude;
+    double Object_Altitude;
+    int Object_parking;
+    int Object_retrograde;
+    int Object_overspeed;
 };
