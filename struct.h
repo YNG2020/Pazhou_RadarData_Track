@@ -35,6 +35,27 @@ struct Radar{
         );
     }       
 };
+struct targetinfo //标定车辆在雷达区域的消息
+{
+    unsigned long ID;
+    double Object_DistLong;
+    double Object_DistLat;
+    double Object_Longitude;
+    double Object_Latitude;
+    double Object_VeloLong;
+    double Object_VeloLat;
+    double VeloRadial;
+    double timestamp;
+    double RCS;
+    double Velodis; //目标速度之差
+    void print(){
+        printf("%ld,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f\n",
+            ID,Object_DistLong,Object_DistLat,Object_Longitude,Object_Latitude,Object_VeloLat
+            ,VeloRadial,timestamp,RCS,Velodis
+        );
+    }  
+};
+
 struct res{
     double Timestamp;
     unsigned long Object_ID;

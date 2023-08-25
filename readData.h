@@ -217,6 +217,120 @@ void readRadarData(const std::string& RadarDataPath,std::vector<Radar>& RadarDat
     }
     inputFile.close();
 }
+void readLaneTarget(const std::string& targetinfoPath,std::vector<targetinfo>& targetinfos){
+    std::ifstream inputFile(targetinfoPath); // 打开一个文件流并指定文件名
+
+    if (!inputFile.is_open()) {
+        std::cerr << "无法打开文件" << std::endl;
+        return ;
+    }
+
+    std::string line;
+    std::getline(inputFile, line);
+    while (std::getline(inputFile, line)) { // 逐行读取文件内容
+        targetinfo data;
+        int index=0;
+        std::string buff="";
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.ID=strTodouble(buff);
+        buff.clear();
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Object_DistLong=strTodouble(buff);
+        buff.clear();
+
+         while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Object_DistLat=strTodouble(buff);
+        buff.clear();
+
+
+         while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Object_Longitude=strTodouble(buff);
+        buff.clear();
+
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Object_Latitude=strTodouble(buff);
+        buff.clear();
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Object_VeloLong=strTodouble(buff);
+        buff.clear();
+
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Object_VeloLat=strTodouble(buff);
+        buff.clear();
+
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.VeloRadial=strTodouble(buff);
+        buff.clear();
+
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.timestamp=strTodouble(buff);
+        buff.clear();
+
+        while(line[index]!=','){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.RCS=strTodouble(buff);
+        buff.clear();
+
+
+        while(index<line.size()&&(line[index]!=','&&line[index]!='\r'&&line[index]!='\n')){
+            buff.push_back(line[index]);
+            index++;
+        }
+        index++;
+        data.Velodis=strTodouble(buff);
+        buff.clear();
+        // std::cout<<line<<std::endl;
+        // data.print();
+        targetinfos.push_back(data);
+    }
+    inputFile.close();
+}
+
 void wirteResult(const std::string& Path,std::vector<res>& Result){
      std::ofstream outFile; // 创建一个输出文件流对象
 
@@ -224,8 +338,8 @@ void wirteResult(const std::string& Path,std::vector<res>& Result){
     outFile.open(Path);
 
     if (!outFile) {
-        std::cerr << "无法打开文件！" << std::endl;
-        return ;
+        std::cerr << "无法打开文件!" << std::endl;
+        return;
     }
     for(auto& re:Result){
         outFile<<std::fixed << std::setprecision(3)<<re.Timestamp<<",";
