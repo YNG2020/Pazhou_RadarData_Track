@@ -1,5 +1,5 @@
 function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
-    n_Gap = 15538;  % 15538是预先用matlab算出来的帧数，以预先进行内存分配
+    n_Gap = length(unique(RadarData(:,1)));  % 预先算出帧数，以预先进行内存分配
     radarFrameTime = zeros(n_Gap, 1); % 雷达数据中不同帧的时间
     radarFrameTimeIdx = zeros(n_Gap, 1);    % 雷达数据中不同帧的时间对应的第一个下标
     radarFrameCnt = zeros(n_Gap, 1);    % 雷达数据中不同帧中点云的数量
@@ -75,7 +75,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
     end
     
     Lane_sp = sqrt(Lane(:, 6).^2 + Lane(:, 7).^2);
-    LaneRadarTrack = nan(n_map, 12);
+    LaneRadarTrack = nan(n_map, 15);
     tmp_predict_x = zeros(n_map, 1);
     tmp_predict_y = zeros(n_map, 1);
     all_radar_x = zeros(n_map, 7);  % 记录针对同一物体的所有雷达数据（纵向距离x）
@@ -103,7 +103,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
                     [predict_x, predict_y] = predict_lot(LastOKIDX, tmpDotIdx, RadarData, LaneRadarTrack, lastLastOKIdx);
 
                     % if cnt == 1 || (RadarData(tmpDotIdx, 3) - LaneRadarTrack(LastOKIDX, 2))^2 + (RadarData(tmpDotIdx, 4) - LaneRadarTrack(LastOKIDX, 3))^2 < 25
-                    if cnt == 1 || (RadarData(tmpDotIdx, 3) - predict_x)^2 + (RadarData(tmpDotIdx, 4) - predict_y)^2 < 25
+                    if cnt == 1 || (RadarData(tmpDotIdx, 3) - predict_x)^2 + (RadarData(tmpDotIdx, 4) - predict_y)^2 < 25 && RadarData(tmpDotIdx, 6) > 0
                         OKFLAG = 1;
                         lastLastOKIdx = LastOKIDX;
                         LastOKIDX = cnt;
@@ -134,7 +134,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
                         [predict_x, predict_y] = predict_lot(LastOKIDX, tmpDotIdx, RadarData, LaneRadarTrack, lastLastOKIdx);
 
                         % if (RadarData(tmpDotIdx, 3) - LaneRadarTrack(LastOKIDX, 2))^2 + (RadarData(tmpDotIdx, 4) - LaneRadarTrack(LastOKIDX, 3))^2 < limit
-                        if (RadarData(tmpDotIdx, 3) - predict_x)^2 + (RadarData(tmpDotIdx, 4) - predict_y)^2 < limit
+                        if (RadarData(tmpDotIdx, 3) - predict_x)^2 + (RadarData(tmpDotIdx, 4) - predict_y)^2 < limit && RadarData(tmpDotIdx, 6) > 0
                             OKFLAG = 1;
                             DotIdx = tmpDotIdx;
                             % 该部分用于检测径向速度相近且位置接近的雷达数据
@@ -177,13 +177,16 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
         LaneRadarTrack(cnt, 3) = all_radar_y(cnt, 7); % 写入距离雷达的横向距离
         LaneRadarTrack(cnt, 4) = Lane(i, 3);    % 写入纬度
         LaneRadarTrack(cnt, 5) = Lane(i, 4);    % 写入经度
-        LaneRadarTrack(cnt, 6) = Lane(i, 6);    % 写入横向速度
-        LaneRadarTrack(cnt, 7) = Lane(i, 7);    % 写入纵向速度
+        LaneRadarTrack(cnt, 6) = Lane(i, 6);    % 写入北向速度
+        LaneRadarTrack(cnt, 7) = Lane(i, 7);    % 写入东向速度
         LaneRadarTrack(cnt, 8) = Lane_sp(i);    % 写入速度
+        LaneRadarTrack(cnt, 13) = v_true_cal(all_radar_x(cnt, 7), all_radar_y(cnt, 7), 7, RadarData(DotIdx, 5), 1); % 写入真实速度;
         LaneRadarTrack(cnt, 9) = RadarData(DotIdx, 5); % 写入径向速度;
         LaneRadarTrack(cnt, 10) = RadarData(radarFrameTimeIdx(Lane2FrameIdx(i)), 1);    % 写入时间
         LaneRadarTrack(cnt, 11) = RadarData(DotIdx, 6);    % 写入RCS
-        LaneRadarTrack(cnt, 12) = LaneRadarTrack(cnt, 9) - LaneRadarTrack(cnt, 8);    % 写入速度差
+        LaneRadarTrack(cnt, 12) = LaneRadarTrack(cnt, 9) - LaneRadarTrack(cnt, 8);    % 写入速度差1
+        LaneRadarTrack(cnt, 14) = LaneRadarTrack(cnt, 13) - LaneRadarTrack(cnt, 8);    % 写入速度差2
+        LaneRadarTrack(cnt, 15) = Lane(i, 5);   % 写入海拔
         cnt = cnt + 1;
     end
 end
@@ -246,6 +249,8 @@ function [predict_x, predict_y] = predict_lot(LastOKIDX, tmpDotIdx, RadarData, L
         p = 1;
         delta_x = delta_x_his * p + delta_x_cur * (1 - p);
         delta_y = delta_y_his * p + delta_y_cur * (1 - p);
+        v = v_true_cal(LaneRadarTrack(LastOKIDX, 2), LaneRadarTrack(LastOKIDX, 3), 7, LaneRadarTrack(LastOKIDX, 9), 1);
+        delta_x = delta_t1 * v;
 
         predict_x = delta_x + LaneRadarTrack(LastOKIDX, 2);
         predict_y = delta_y + LaneRadarTrack(LastOKIDX, 3);
@@ -258,5 +263,5 @@ end
 
 function [UNIX_time] = GPST2UNIX(weeks, second_in_weeks)
     UNIX_TO_GPST = 315964800;
-    UNIX_time = UNIX_TO_GPST + 24 * 60 * 60 * 7 * weeks + second_in_weeks - 19; % 闰秒补偿似乎设置成19s，从图像看效果会更好
+    UNIX_time = UNIX_TO_GPST + 24 * 60 * 60 * 7 * weeks + second_in_weeks - 18; % 闰秒补偿似乎设置成19s，从图像看效果会更好
 end

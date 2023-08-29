@@ -11,5 +11,3 @@ RadarData = RadarData_table.Variables;
 Lane1 = Lane1_table{:, 2:12};
 Lane2 = Lane2_table{:, 2:12};
 Lane3 = Lane3_table{:, 2:12};
-
-Lane1_sp = sqrt(Lane1(:, 6).^2 + Lane1(:, 7).^2);
