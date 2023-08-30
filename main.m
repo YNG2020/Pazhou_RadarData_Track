@@ -32,7 +32,7 @@ frameGapIdx(n_Gap + 1) = n_radar_data + 1;
 carA = 5;   % 设置汽车在一般情况下的最大加速度为5m/s^2，包括正向与负向的
 maxVarX = 10;   % 设置同一辆车的在前后帧的在车道上的最大纵向距离偏差
 maxVarY = 2;    % 设置同一辆车的在前后帧的在车道上的最大横向距离偏差
-maxVarRCS = 10; % 设置同一辆车的在前后帧的RCS偏差
+maxVarRCS = 15; % 设置同一辆车的在前后帧的RCS偏差
 RadarHeight = 7;    % 雷达高度
 
 cnt = 1;
@@ -52,9 +52,11 @@ data_idx = 0;
 all_res = zeros(n_radar_data, 14);
 carUniqueId = -1;
 for cnt = 1 : n_Gap
+    if cnt == n_Gap
+        a = 1;
+    end
     frameStart = frameGapIdx(cnt);  % 当前帧的在雷达数据的起始位
     nFrame = frameGapIdx(cnt + 1) - frameGapIdx(cnt);   % 该帧的帧数
-    nowT = curFrameData(1, 1);  % 记录现在的时刻
     tmpIndex = zeros(nFrame, 1);
     for i = 1 : nFrame
         if check_in_zone(k, b_left, b_right, RadarData(frameStart + i - 1, 3), RadarData(frameStart + i - 1, 4)) && RadarData(frameStart + i - 1, 6) > 0  % 在区域内，且RCS > 0
@@ -65,7 +67,8 @@ for cnt = 1 : n_Gap
     OKIndexPointer_len = length(OKIndex);
     BlockIndex = zeros(OKIndexPointer_len, 1);
     [curFrameData, ~] = sortrows(RadarData(frameStart + OKIndex - 1, :), [5 3 4]); % 挑出合理的雷达数据点，同时先后对速度，纵向距离，横向距离升序排序
-    
+    nowT = curFrameData(1, 1);  % 记录现在的时刻
+
     %%%%% 跟踪算法
     i = 1;
     while i <= tracer_pointer && tracer_pointer > 0  % 在跟踪队列里，一个个比对当前帧的数据，匹配成功的数据点，将被拿走
@@ -78,7 +81,7 @@ for cnt = 1 : n_Gap
         carRCS = all_res(dataID, 7);
         carClass = all_res(dataID, 8);
         deltaT = nowT - all_res(dataID, 1);
-        coupleFlag = 0; j = 1;
+        coupleFlag = 0; j = 1;  % j指向curFrameData数据中的数据点
         while j <= OKIndexPointer_len  % 在OKIndex里寻找能与正在追踪的车辆匹配的点，找到之后，把它从OKIndex中删除
             if BlockIndex(j)
                 j = j + 1; continue;
@@ -104,7 +107,7 @@ for cnt = 1 : n_Gap
             sp_mean = curFrameData(j, 5); sp_sum = sp_mean;
             RCS_mean = curFrameData(j, 6);RCS_sum = RCS_mean;
             BlockIndex(j) = 1;    % 匹配成功的数据点，将被拿走
-            j = j + 1; tmpCnt = 1;
+            jStart = j; j = j + 1; tmpCnt = 1;
             while (j <= OKIndexPointer_len)
                 if BlockIndex(j)
                     j = j + 1; continue;
@@ -130,10 +133,13 @@ for cnt = 1 : n_Gap
             all_res(data_idx, :) = writeChaserResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
-                kAti, bAti);            
+                kAti, bAti);
+            % 更新在缓冲区的数据
+            tracer_buffer(i, 1) = data_idx;
+            tracer_buffer(i, 2) = frameStart + curFrameData(jStart, 2);
             break;
         end
-        if coupleFlag == 0
+        if coupleFlag == 0      % 匹配失败，该跟踪数据从缓冲区中被移除
             tracer_buffer(i, 1) = tracer_buffer(tracer_pointer, 1);
             tracer_buffer(i, 2) = tracer_buffer(tracer_pointer, 2);
             tracer_pointer = tracer_pointer - 1;
@@ -143,13 +149,13 @@ for cnt = 1 : n_Gap
     end
     
     %%%%% 识别算法
-    j = 1;
+    j = 1;  % j指向curFrameData数据中的数据点
     while j <= OKIndexPointer_len - 1  % 最后一个点无须检验，因为在当前假设下，最后一点如果不与其它点，成为组合，那么单独一个雷达点不被判断为车辆
         if BlockIndex(j)
             j = j + 1; continue;
         end
         if curFrameData(j + 1, 5) - curFrameData(j, 5) > 0.1
-            BlockIndex(j) = 1; % 如果这个点能与前面的点连接，那么它早该被block，同时，由于与下一个点的速度差已经超过了0.1，那么接下来的所有点都不能与之组合
+            BlockIndex(j) = 1; % 如果这个点能与前面的点联结，那么它早该被block，同时，由于与下一个点的速度差已经超过了0.1，那么接下来的所有点都不能与之组合
             j = j + 1; continue;
         end
 
@@ -177,7 +183,7 @@ for cnt = 1 : n_Gap
                 Xmin = curFrameData(j, 3);
             end
             if curFrameData(j, 3) > Xmax
-                Xmax = curFrameData(j, 3) < Xmin;
+                Xmax = curFrameData(j, 3);
             end
             coupleFlag = 1;  tmpCnt = tmpCnt + 1;
             X_sum = X_sum + curFrameData(j, 3);   X_mean = X_sum / tmpCnt;       
@@ -191,7 +197,7 @@ for cnt = 1 : n_Gap
             BlockIndex(jStart) = 1;
             data_idx = data_idx + 1;
             carUniqueId = carUniqueId + 1;
-            carLen = (Xmax - Xmin) / cosTheta2 + 0.4;
+            carLen = (Xmax - Xmin) / cosTheta2 + 0.2;
             if carLen < 2.5
                 carClass = 2;
             elseif carLen > 7.5
@@ -205,7 +211,9 @@ for cnt = 1 : n_Gap
                 kAti, bAti);
             tracer_pointer = tracer_pointer + 1;
             tracer_buffer(tracer_pointer, 1) = data_idx;
-            tracer_buffer(tracer_pointer, 2) = frameStart + OKIndex(jStart) - 1;    
+            tracer_buffer(tracer_pointer, 2) = frameStart + curFrameData(jStart, 2); 
+        else % 这一步没有所谓，反正后面也没有jStart数据点的事，但为了完整性，还是给对应位置位
+            BlockIndex(jStart) = 1; 
         end
         j = jStart + 1;
     end
