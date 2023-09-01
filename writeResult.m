@@ -1,8 +1,8 @@
 % 写入正在追踪的目标的数据
-function res = writeChaserResult(nowT, carID, X_mean, Y_mean, ...
+function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     RadarHeight, sp_mean, cosTheta2, sinTheta2, carLat, RCS_mean, ...
     carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
-    kAti, bAti)
+    kAti, bAti, RadarDataID)
     res = zeros(1, 14);
     res(1) = nowT;
     res(2) = carID;
@@ -37,4 +37,5 @@ function res = writeChaserResult(nowT, carID, X_mean, Y_mean, ...
     else
         res(14) = 0;
     end
+    res(15) = RadarDataID;
 end
