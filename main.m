@@ -39,7 +39,8 @@ RadarHeight = 7;    % 雷达高度
 RCSMin = 0;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
 carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
-failMaxLim = 0;  % 允许最大的连续追踪失败的次数
+interpolationLimCnt = 0;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
+interpolationLimM = 250;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
 
 cnt = 1;
 lastTime = 0;
@@ -93,7 +94,7 @@ for cnt = 1 : n_Gap
             if BlockIndex(j)
                 j = j + 1; continue;
             end
-            if abs(carSpeed - curFrameData(j, 5)) > deltaT * carA %(deltaT在0.025~0.2之间)
+            if abs(carSpeed - curFrameData(j, 5)) / cosTheta2 > deltaT * carA %(deltaT在0.025~0.2之间)
                 j = j + 1; continue;
             end
             if abs(carDisLat - curFrameData(j, 4)) > maxVarY
@@ -149,7 +150,7 @@ for cnt = 1 : n_Gap
             break;
         end
         if coupleFlag == 0      % 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除
-            if tracer_buffer(i, 3) < failMaxLim && carDisLog < 400 && carSpeed ~= 0
+            if tracer_buffer(i, 3) < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed ~= 0
                 data_idx = data_idx + 1;
                 RadarDataID = radarDataID;
                 v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2);   % 计算车辆的实际速度，默认车辆沿着车道方向行驶
@@ -181,7 +182,7 @@ for cnt = 1 : n_Gap
             j = j + 1; continue;
         end
         if curFrameData(j + 1, 5) - curFrameData(j, 5) > carSpeedVar
-            BlockIndex(j) = 1; % 如果这个点能与前面的点联结，那么它早该被block，同时，由于与下一个点的速度差已经超过了0.1，那么接下来的所有点都不能与之组合
+            BlockIndex(j) = 1; % 如果这个点能与前面的点联结，那么它早该被block，同时，由于与下一个点的速度差已经超过了carSpeedVar，那么接下来的所有点都不能与之组合
             j = j + 1; continue;
         end
         if curFrameData(j, 5) == 0 && curFrameData(j, 6) < RCSMinZero
@@ -195,9 +196,6 @@ for cnt = 1 : n_Gap
         RCS_mean = curFrameData(j, 6);RCS_sum = RCS_mean;
         coupleFlag = 0; jStart = j; Xmin = X_mean; Xmax = X_mean;
         j = j + 1; tmpCnt = 1;
-        if sp_mean < 0
-            a = 1;
-        end
         while (j <= OKIndexPointer_len)
             if BlockIndex(j)
                 j = j + 1; continue;
@@ -254,4 +252,4 @@ for cnt = 1 : n_Gap
     end
 end
 final_data = all_res(1 : data_idx, :);
-% writematrix(final_data(:, 1:14), 'result.csv')
+writematrix(final_data(:, 1:14), 'result.csv')
