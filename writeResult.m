@@ -10,7 +10,9 @@ function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     res(4) = Y_mean;
     sp_true = v_true_cal(X_mean, Y_mean, RadarHeight, sp_mean, cosTheta2);
     res(5) = sp_true * cosTheta2;
-    if Y_mean > carLat
+    if (abs(Y_mean - carLat) < 0.0001)
+        res(6) = 0;
+    elseif Y_mean > carLat
         res(6) = abs(sp_true * sinTheta2);
     else
         res(6) = -abs(sp_true * sinTheta2);
@@ -32,7 +34,7 @@ function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     else
         res(13) = 0;
     end
-    if sp_true > 16.6667
+    if abs(sp_true) > 16.6667
         res(14) = 1;
     else
         res(14) = 0;

@@ -9,7 +9,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
     
     n_RadarData = length(RadarData(:, 1));
     for i = 2 : n_RadarData
-        if RadarData(i, 2) > radarFrameTimeIdx(cnt)
+        if RadarData(i, 1) == radarFrameTime(cnt - 1)
             continue;
         end
         radarFrameTime(cnt) = RadarData(i, 1);
@@ -91,10 +91,13 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
         [sort_sp_gap, idx] = sort(abs(sp_gap), 'ascend');
         
         OKFLAG = 0;
+        if (cnt == 1039 && n_map == 1050)
+            a = 1;
+        end
 
         %%%%%%%%%%% 第一检验条件：如果能找到速度相近，且距离上一个OK的点的距离小于5m的两个点，则视作成功找到对应点
         for j = 1 : n_Frame
-            if sort_sp_gap(j) > 1 || sort_sp_gap(j) == Lane_sp(i)
+            if sort_sp_gap(j) > 1   % 速度差距过大，提前结束这一检验
                 break;
             end
             if j < n_Frame
@@ -165,7 +168,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
             end
             DotIdx = radarFrameTimeIdx(Lane2FrameIdx(i)) + min_idx - 1;
             % 该部分用于检测径向速度相近且位置接近的雷达数据
-            [all_radar_x(cnt, :), all_radar_y(cnt, :)] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx);
+            [all_radar_x(cnt, :), all_radar_y(cnt, :)] = find_relate_data(i, min_idx, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx);
             
         end
         
@@ -263,5 +266,5 @@ end
 
 function [UNIX_time] = GPST2UNIX(weeks, second_in_weeks)
     UNIX_TO_GPST = 315964800;
-    UNIX_time = UNIX_TO_GPST + 24 * 60 * 60 * 7 * weeks + second_in_weeks - 18; % 闰秒补偿似乎设置成19s，从图像看效果会更好
+    UNIX_time = UNIX_TO_GPST + 24 * 60 * 60 * 7 * weeks + second_in_weeks - 18;
 end

@@ -2,7 +2,7 @@
 [k1, b1] = line_plofit(LaneRadarTrack1(:, 2), LaneRadarTrack1(:, 3));
 [k2, b2] = line_plofit(LaneRadarTrack2(:, 2), LaneRadarTrack2(:, 3));
 [k3, b3] = line_plofit(LaneRadarTrack3(:, 2), LaneRadarTrack3(:, 3));
-k = (k1 + k2 + k3) / 3;
+k = (k1 + k2 + k3) / 3;     % 车道在雷达坐标系上的斜率
 tan1 = LaneRadarTrack1(:, 6) ./ LaneRadarTrack1(:, 7);
 tan2 = LaneRadarTrack2(:, 6) ./ LaneRadarTrack2(:, 7);
 tan3 = LaneRadarTrack3(:, 6) ./ LaneRadarTrack3(:, 7);
@@ -11,7 +11,7 @@ arcTan2 = atan(tan2);
 arcTan3 = atan(tan3);
 theta1 = mean([arcTan1; arcTan2; arcTan3]); % 经纬度与雷达坐标系之间的角度偏差
 theta2 = atan(k);   % 车道与雷达坐标系之间的角度偏差
-theta0 = theta1 - theta2;
+theta0 = theta1 - theta2;   % 经纬度与车道之间的角度偏差
 latitudeMean = mean([LaneRadarTrack1(:, 4); LaneRadarTrack2(:, 4); LaneRadarTrack3(:, 4)]); % 平均纬度
 [ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
 [b_left, b_right] = get_intercept(k, b1, b3);
@@ -39,8 +39,8 @@ RadarHeight = 7;    % 雷达高度
 RCSMin = 0;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
 carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
-interpolationLimCnt = 0;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
-interpolationLimM = 250;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
+interpolationLimCnt = 2;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
+interpolationLimM = 400;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
 
 cnt = 1;
 lastTime = 0;
@@ -61,19 +61,17 @@ carUniqueId = -1;
 for cnt = 1 : n_Gap
     frameStart = frameGapIdx(cnt);  % 当前帧的在雷达数据的起始位
     nFrame = frameGapIdx(cnt + 1) - frameGapIdx(cnt);   % 该帧的帧数
-    curFrameIdx = (0 : nFrame - 1)';
     tmpIndex = zeros(nFrame, 1);
     for i = 1 : nFrame
         if check_in_zone(k, b_left, b_right, RadarData(frameStart + i - 1, 3), RadarData(frameStart + i - 1, 4)) && RadarData(frameStart + i - 1, 6) > RCSMin  % 在区域内，且RCS > RCSMin
             tmpIndex(i) = 1;        % 在C++中，寻找OKIndex应该用push来代替
         end
     end
-    OKIndex = find(tmpIndex);
-    curFrameIdx = curFrameIdx(OKIndex);
+    OKIndex = find(tmpIndex) - 1;
     OKIndexPointer_len = length(OKIndex);
     BlockIndex = zeros(OKIndexPointer_len, 1);
-    [curFrameData, sortedIdx] = sortrows(RadarData(frameStart + OKIndex - 1, :), [5 3 4]); % 挑出合理的雷达数据点，同时先后对速度，纵向距离，横向距离升序排序
-    curFrameIdx = curFrameIdx(sortedIdx);
+    [curFrameData, sortedIdx] = sortrows(RadarData(frameStart + OKIndex, :), [5 3 4 6]); % 挑出合理的雷达数据点，同时先后对速度，纵向距离，横向距离，RCS升序排序
+    OKIndex = OKIndex(sortedIdx);
     nowT = curFrameData(1, 1);  % 记录现在的时刻
 
     %%%%% 跟踪算法
@@ -138,7 +136,7 @@ for cnt = 1 : n_Gap
                 j = j + 1;
             end
             data_idx = data_idx + 1;
-            RadarDataID = frameStart + curFrameIdx(jStart);
+            RadarDataID = frameStart + OKIndex(jStart);
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
@@ -181,7 +179,7 @@ for cnt = 1 : n_Gap
         if BlockIndex(j)
             j = j + 1; continue;
         end
-        if curFrameData(j + 1, 5) - curFrameData(j, 5) > carSpeedVar
+        if abs(curFrameData(j + 1, 5) - curFrameData(j, 5)) > carSpeedVar
             BlockIndex(j) = 1; % 如果这个点能与前面的点联结，那么它早该被block，同时，由于与下一个点的速度差已经超过了carSpeedVar，那么接下来的所有点都不能与之组合
             j = j + 1; continue;
         end
@@ -227,16 +225,13 @@ for cnt = 1 : n_Gap
             BlockIndex(jStart) = 1;
             data_idx = data_idx + 1;
             carUniqueId = carUniqueId + 1;
-            carLen = (Xmax - Xmin) / cosTheta2 + 0.2;
-            if carLen < 2.5
-                carClass = 2;
-            elseif carLen > 7.5
-                carClass = 1;
-            else
+            carLen = (Xmax - Xmin) / cosTheta2;
+            if carLen < 7.5
                 carClass = 0;
+            else
+                carClass = 1;
             end
-            carClass = 0;
-            RadarDataID = frameStart + curFrameIdx(jStart);
+            RadarDataID = frameStart + OKIndex(jStart);
             all_res(data_idx, :) = writeResult(nowT, carUniqueId, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, Y_mean, RCS_mean, ...
                 carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...

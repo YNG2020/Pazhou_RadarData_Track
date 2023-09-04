@@ -1,8 +1,8 @@
 % 求出两条界限直线的截距
 function [b_left, b_right] = get_intercept(k, b1, b3)
     b = b1;
-    lineGap1 = 1.8 + 1;     % 假设第一车道的中央与左侧路基距离
-    lineGap2 = 12.6 + 1;     % 假设第一车道的中央与右侧路基距离
+    lineGap1 = 1.8 + 0;     % 假设第一车道的中央与左侧路基距离
+    lineGap2 = 12.6 + 0;     % 假设第一车道的中央与右侧路基距离
     
     b_left_tmp1 = b + lineGap1 * sqrt(1 + k^2);
     b_left_tmp2 = b - lineGap1 * sqrt(1 + k^2);

@@ -1,3 +1,4 @@
+% 检查指定点是否位于区域内
 function [INFLAG] = check_in_zone(k, b_left, b_right, x, y)
     if (b_left < b_right)
         b_tmp = b_left;
