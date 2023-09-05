@@ -1,3 +1,4 @@
+#pragma once
 #include<iostream>
 #include<string>
 struct rtk{        
@@ -19,7 +20,8 @@ struct rtk{
         printf("%ld,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f\n",
             Week,Seconds,timestamp,Lat,Lon,Hgt,NorthVelocity,EastVelocity,UpVelocity,Roll,Pitch,Azimuth
         );
-    }        
+    }
+    static void readRtk(const char* rtkPath, std::vector<rtk>& rtkline);
 };
 
 struct Radar{        
@@ -33,9 +35,11 @@ struct Radar{
         printf("%.15f,%ld,%.15f,%.15f,%.15f,%.15f\n",
             timestamp,ID,DistLong,DistLat,VeloRadial,RCS
         );
-    }       
+    }
+    static int readRadarData(const std::string& RadarDataPath, std::vector<Radar>& RadarData);
 };
-struct targetinfo //标定车辆在雷达区域的消息
+
+struct targetInfo //标定车辆在雷达区域的消息
 {
     unsigned long ID;
     double Object_DistLong;
@@ -71,4 +75,7 @@ struct res{
     int Object_parking;
     int Object_retrograde;
     int Object_overspeed;
+
+    static void writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<bool>& removeFlag);
+    res() { Timestamp = 0.0; };
 };
