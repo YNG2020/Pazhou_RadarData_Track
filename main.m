@@ -38,6 +38,7 @@ maxVarRCS = 15; % 设置同一辆车的在前后帧的RCS偏差
 RadarHeight = 7;    % 雷达高度
 RCSMin = 0;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
+RCSMinSingle = 10;  % 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
 carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
 interpolationLimCnt = 2;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
 interpolationLimM = 400;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
@@ -52,11 +53,14 @@ for i = 1 : n_radar_data
     lastTime = RadarData(i, 1);
     cnt = cnt + 1;
 end
+cnt2 = 0;
+singleTar = zeros(15000, 7);
 
-tracer_buffer = zeros(1000, 3); % 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数
+tracer_buffer = zeros(1000, 4); % 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
 tracer_pointer = 0; % tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
 data_idx = 0;
 all_res = zeros(n_radar_data, 15);
+removeFlag = zeros(n_radar_data, 1);    % 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
 carUniqueId = -1;
 for cnt = 1 : n_Gap
     frameStart = frameGapIdx(cnt);  % 当前帧的在雷达数据的起始位
@@ -64,6 +68,9 @@ for cnt = 1 : n_Gap
     tmpIndex = zeros(nFrame, 1);
     for i = 1 : nFrame
         if check_in_zone(k, b_left, b_right, RadarData(frameStart + i - 1, 3), RadarData(frameStart + i - 1, 4)) && RadarData(frameStart + i - 1, 6) > RCSMin  % 在区域内，且RCS > RCSMin
+            if RadarData(frameStart + i - 1, 5) == 0 && RadarData(frameStart + i - 1, 6) < RCSMinZero   % 如果该点速度为0，且RCS<RCSMinZero，去掉
+                continue;
+            end
             tmpIndex(i) = 1;        % 在C++中，寻找OKIndex应该用push来代替
         end
     end
@@ -145,10 +152,11 @@ for cnt = 1 : n_Gap
             tracer_buffer(i, 1) = data_idx;
             tracer_buffer(i, 2) = RadarDataID;
             tracer_buffer(i, 3) = 0;
+            tracer_buffer(i, 4) = tracer_buffer(i, 4) + 1;
             break;
         end
-        if coupleFlag == 0      % 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除
-            if tracer_buffer(i, 3) < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed ~= 0
+        if coupleFlag == 0      % 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除。同时，初始追踪一次就失败的，不进行补帧
+            if tracer_buffer(i, 4) > 1 && tracer_buffer(i, 3) < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed ~= 0
                 data_idx = data_idx + 1;
                 RadarDataID = radarDataID;
                 v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2);   % 计算车辆的实际速度，默认车辆沿着车道方向行驶
@@ -163,9 +171,13 @@ for cnt = 1 : n_Gap
                 tracer_buffer(i, 3) = tracer_buffer(i, 3) + 1;
                 i = i + 1;
             else
+                if tracer_buffer(i, 4) == 1 % 初始追踪一次就失败的，将从最终输出队列中删除
+                    removeFlag(dataID) = 1;
+                end
                 tracer_buffer(i, 1) = tracer_buffer(tracer_pointer, 1);
                 tracer_buffer(i, 2) = tracer_buffer(tracer_pointer, 2);
                 tracer_buffer(i, 3) = tracer_buffer(tracer_pointer, 3);
+                tracer_buffer(i, 4) = tracer_buffer(tracer_pointer, 4);
                 tracer_pointer = tracer_pointer - 1;
             end
         else
@@ -175,16 +187,9 @@ for cnt = 1 : n_Gap
     
     %%%%% 识别算法
     j = 1;  % j指向curFrameData数据中的数据点
-    while j <= OKIndexPointer_len - 1  % 最后一个点无须检验，因为在当前假设下，最后一点如果不与其它点，成为组合，那么单独一个雷达点不被判断为车辆
+    while j <= OKIndexPointer_len
         if BlockIndex(j)
             j = j + 1; continue;
-        end
-        if abs(curFrameData(j + 1, 5) - curFrameData(j, 5)) > carSpeedVar
-            BlockIndex(j) = 1; % 如果这个点能与前面的点联结，那么它早该被block，同时，由于与下一个点的速度差已经超过了carSpeedVar，那么接下来的所有点都不能与之组合
-            j = j + 1; continue;
-        end
-        if curFrameData(j, 5) == 0 && curFrameData(j, 6) < RCSMinZero
-            BlockIndex(j) = 1; j = j + 1; continue;
         end
 
         % 在数据中认为有可能发现车辆
@@ -221,6 +226,13 @@ for cnt = 1 : n_Gap
             BlockIndex(j) = 1;    % 匹配成功的数据点，将被拿走
             j = j + 1;
         end
+        if ~coupleFlag  % 说明只有单个有效的雷达数据点被探测到
+            if curFrameData(jStart, 6) < RCSMinSingle
+                BlockIndex(jStart) = 1;
+            else
+                coupleFlag = 1; % 单个有效雷达数据点也暂时纳入跟踪队列
+            end
+        end
         if coupleFlag
             BlockIndex(jStart) = 1;
             data_idx = data_idx + 1;
@@ -240,11 +252,12 @@ for cnt = 1 : n_Gap
             tracer_buffer(tracer_pointer, 1) = data_idx;
             tracer_buffer(tracer_pointer, 2) = RadarDataID; 
             tracer_buffer(tracer_pointer, 3) = 0;
-        else % 没有这一步没有所谓，反正后面也没有jStart数据点的事，但为了完整性，还是给对应位置位
-            BlockIndex(jStart) = 1; 
+            tracer_buffer(tracer_pointer, 4) = 1;
         end
         j = jStart + 1;
     end
 end
-final_data = all_res(1 : data_idx, :);
-writematrix(final_data(:, 1:14), 'result.csv')
+final_data = all_res(1 : data_idx, 1:14);
+removeFlag = removeFlag(1 : data_idx);
+final_data = final_data(removeFlag == 0, :);
+writematrix(final_data, 'result.csv')
