@@ -82,14 +82,16 @@ int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& R
     return frameCnt;
 }
 
-void res::writeResult(const std::string& Path, std::vector<res>& Result) {
+void res::writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<bool>& removeFlag) {
     std::ofstream outFile; // 创建一个输出文件流对象
-
+    int cnt = 0;
     // 打开文件，如果文件不存在则创建
     outFile.open(Path);
     for (auto& re : Result) {
         if (re.Timestamp == 0)
             break;
+        if (removeFlag[cnt++])
+            continue;
         outFile << std::fixed << std::setprecision(3) << re.Timestamp << ",";
         outFile << re.Object_ID << ",";
         outFile << re.Object_DistLong << ",";

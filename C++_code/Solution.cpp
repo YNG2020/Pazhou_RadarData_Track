@@ -281,6 +281,7 @@ void Solution::run() {
     double RadarHeight = 7.0;   // 雷达高度
     double RCSMin = 0.0;        // 允许的最小RCS
     double RCSMinZero = 10.0;   // 当雷达数据点的径向速度为0时，允许的最小RCS
+    double RCSMinSingle = 10.0; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
     double carSpeedVar = 0.1;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
     int interpolationLimCnt = 2;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
     int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧
@@ -295,10 +296,11 @@ void Solution::run() {
         ++cnt;
     }
 
-    vector<vector<int>> tracer_buffer(1000, vector<int>(3, 0)); // 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数
+    vector<vector<int>> tracer_buffer(1000, vector<int>(4, 0)); // 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
     int tracer_pointer = -1;     // tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
     int data_idx = -1;
     vector<res> all_res(n_radar_data / 2);
+    vector<bool> removeFlag(n_radar_data / 2, false);   // 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
     int carUniqueId = -1;
     for (int cnt = 0; cnt < n_Gap; ++cnt) {
         int frameStart = frameGapIdx[cnt];  // 当前帧的在雷达数据的起始位
@@ -308,6 +310,8 @@ void Solution::run() {
             double y = RadarData[frameStart + i].DistLat, x = RadarData[frameStart + i].DistLong;
             double rcs = RadarData[frameStart + i].RCS;
             if (check_in_zone(k, b_left, b_right, x, y) && rcs > RCSMin) {
+                if (RadarData[frameStart + i].VeloRadial == 0 && RadarData[frameStart + i].RCS < RCSMinZero) // 如果该点速度为0，且RCS < RCSMinZero，去掉
+                    continue;
                 OKIndex.push_back(i);
             }
         }
@@ -406,10 +410,11 @@ void Solution::run() {
                 tracer_buffer[i][0] = data_idx;
                 tracer_buffer[i][1] = RadarDataID;
                 tracer_buffer[i][2] = 0;
+                ++tracer_buffer[i][3];
                 break;
             }
-            if (!coupleFlag) {  // 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除
-                if (tracer_buffer[i][2] < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed != 0) {
+            if (!coupleFlag) {  // 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除。同时，初始追踪一次就失败的，不进行补帧
+                if (tracer_buffer[i][3] > 1 && tracer_buffer[i][2] < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed != 0) {
                     ++data_idx;
                     int RadarDataID = radarDataID;
                     double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // 计算车辆的实际速度，默认车辆沿着车道方向行驶
@@ -422,9 +427,12 @@ void Solution::run() {
                     ++i;
                 }
                 else {
+                    if (tracer_buffer[i][3] == 1)   // 初始追踪一次就失败的，将从最终输出队列中删除
+                        removeFlag[dataID] = true;
                     tracer_buffer[i][0] = tracer_buffer[tracer_pointer][0];
                     tracer_buffer[i][1] = tracer_buffer[tracer_pointer][1];
                     tracer_buffer[i][2] = tracer_buffer[tracer_pointer][2];
+                    tracer_buffer[i][3] = tracer_buffer[tracer_pointer][3];
                     --tracer_pointer;
                 }
             }
@@ -434,16 +442,9 @@ void Solution::run() {
 
         // 识别算法
         int j = 0;  // j指向curFrameData数据中的数据点
-        while (j < OKIndexPointer_len - 1) {    // 最后一个点无须检验，因为在当前假设下，最后一点如果不与其它点，成为组合，那么单独一个雷达点不被判断为车辆
+        while (j < OKIndexPointer_len) {
             if (BlockIndex[j]) {
                 ++j; continue;
-            }
-            if (abs(curFrameData[sortedIdx[j + 1]].VeloRadial - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
-                BlockIndex[j] = true;  // 如果这个点能与前面的点联结，那么它早该被block，同时，由于与下一个点的速度差已经超过了carSpeedVar，那么接下来的所有点都不能与之组合
-                ++j; continue;
-            }
-            if (curFrameData[sortedIdx[j]].VeloRadial == 0 && curFrameData[sortedIdx[j]].RCS < RCSMinZero) {
-                BlockIndex[j] = true; ++j; continue;
             }
 
             // 在数据中认为有可能发现车辆
@@ -483,6 +484,12 @@ void Solution::run() {
                 BlockIndex[j] = true; // 匹配成功的数据点，将被拿走
                 ++j;
             }
+            if (!coupleFlag) {  // 说明只有单个有效的雷达数据点被探测到
+                if (curFrameData[sortedIdx[jStart]].RCS < RCSMinSingle)
+                    BlockIndex[jStart] = true;
+                else
+                    coupleFlag = true;  // 单个有效雷达数据点也暂时纳入跟踪队列
+            }
             if (coupleFlag) {
                 BlockIndex[jStart] = true;
                 ++data_idx;
@@ -499,13 +506,12 @@ void Solution::run() {
                 tracer_buffer[tracer_pointer][0] = data_idx;
                 tracer_buffer[tracer_pointer][1] = RadarDataID;
                 tracer_buffer[tracer_pointer][2] = 0;
+                tracer_buffer[tracer_pointer][3] = 1;
             }
-            else    // 没有这一步没有所谓，反正后面也没有jStart数据点的事，但为了完整性，还是给对应位置位
-                BlockIndex[jStart] = true;
             j = jStart + 1;
         }
     }
-    res::writeResult("result.csv", all_res);
+    res::writeResult("result.csv", all_res, removeFlag);
 }
 
 // 写下单条结果
