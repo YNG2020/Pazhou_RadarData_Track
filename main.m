@@ -40,7 +40,7 @@ RCSMin = 0;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
 RCSMinSingle = 10;  % 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
 carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
-interpolationLimCnt = 2;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
+interpolationLimCnt = 1;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
 interpolationLimM = 400;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
 
 cnt = 1;
@@ -151,26 +151,12 @@ for cnt = 1 : n_Gap
             % 更新在缓冲区的数据
             tracer_buffer(i, 1) = data_idx;
             tracer_buffer(i, 2) = RadarDataID;
-            tracer_buffer(i, 3) = 0;
+            tracer_buffer(i, 3) = 0;    % 连续追踪失败次数归零
             tracer_buffer(i, 4) = tracer_buffer(i, 4) + 1;
             break;
         end
-        if coupleFlag == 0      % 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除。同时，初始追踪一次就失败的，不进行补帧
-            if tracer_buffer(i, 4) > 1 && tracer_buffer(i, 3) < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed ~= 0
-                data_idx = data_idx + 1;
-                RadarDataID = radarDataID;
-                v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2);   % 计算车辆的实际速度，默认车辆沿着车道方向行驶
-                carX = carDisLog + deltaT * v_true * cosTheta2;
-                carY = carDisLat;
-                all_res(data_idx, :) = writeResult(nowT, carID, carX, carY, ...
-                    RadarHeight, carSpeed, cosTheta2, sinTheta2, carDisLat, carRCS, ...
-                    carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
-                    kAti, bAti, RadarDataID);
-                tracer_buffer(i, 1) = data_idx;
-                tracer_buffer(i, 2) = RadarDataID;
-                tracer_buffer(i, 3) = tracer_buffer(i, 3) + 1;
-                i = i + 1;
-            else
+        if coupleFlag == 0      % 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
+            if tracer_buffer(i, 3) > 5
                 if tracer_buffer(i, 4) == 1 % 初始追踪一次就失败的，将从最终输出队列中删除
                     removeFlag(dataID) = 1;
                 end
@@ -179,6 +165,9 @@ for cnt = 1 : n_Gap
                 tracer_buffer(i, 3) = tracer_buffer(tracer_pointer, 3);
                 tracer_buffer(i, 4) = tracer_buffer(tracer_pointer, 4);
                 tracer_pointer = tracer_pointer - 1;
+            else
+                tracer_buffer(i, 3) = tracer_buffer(i, 3) + 1;  % 连续追踪失败次数+1
+                i = i + 1;
             end
         else
             i = i + 1;
@@ -225,13 +214,6 @@ for cnt = 1 : n_Gap
             RCS_sum = RCS_sum + curFrameData(j, 6);RCS_mean = RCS_sum / tmpCnt;
             BlockIndex(j) = 1;    % 匹配成功的数据点，将被拿走
             j = j + 1;
-        end
-        if ~coupleFlag  % 说明只有单个有效的雷达数据点被探测到
-            if curFrameData(jStart, 6) < RCSMinSingle
-                BlockIndex(jStart) = 1;
-            else
-                coupleFlag = 1; % 单个有效雷达数据点也暂时纳入跟踪队列
-            end
         end
         if coupleFlag
             BlockIndex(jStart) = 1;
