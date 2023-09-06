@@ -283,7 +283,7 @@ void Solution::run() {
     double RCSMinZero = 10.0;   // 当雷达数据点的径向速度为0时，允许的最小RCS
     double RCSMinSingle = 10.0; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
     double carSpeedVar = 0.1;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
-    int interpolationLimCnt = 2;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
+    int interpolationLimCnt = 1;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
     int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧
     // ****************************************************************************************
 
@@ -409,24 +409,12 @@ void Solution::run() {
                 // 更新在缓冲区的数据
                 tracer_buffer[i][0] = data_idx;
                 tracer_buffer[i][1] = RadarDataID;
-                tracer_buffer[i][2] = 0;
+                tracer_buffer[i][2] = 0;    // 连续追踪失败次数归零
                 ++tracer_buffer[i][3];
                 break;
             }
-            if (!coupleFlag) {  // 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除。同时，初始追踪一次就失败的，不进行补帧
-                if (tracer_buffer[i][3] > 1 && tracer_buffer[i][2] < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed != 0) {
-                    ++data_idx;
-                    int RadarDataID = radarDataID;
-                    double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // 计算车辆的实际速度，默认车辆沿着车道方向行驶
-                    double carX = carDisLog + deltaT * v_true * cosTheta2;
-                    double carY = carDisLat;
-                    writeSingleResult(nowT, carID, carX, carY, carDisLat, RadarHeight, carSpeed, carRCS, carClass, RadarDataID, all_res, data_idx);
-                    tracer_buffer[i][0] = data_idx;
-                    tracer_buffer[i][1] = RadarDataID;
-                    ++tracer_buffer[i][2];
-                    ++i;
-                }
-                else {
+            if (!coupleFlag) {  // 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
+                if (tracer_buffer[i][2] > 5) {
                     if (tracer_buffer[i][3] == 1)   // 初始追踪一次就失败的，将从最终输出队列中删除
                         removeFlag[dataID] = true;
                     tracer_buffer[i][0] = tracer_buffer[tracer_pointer][0];
@@ -434,6 +422,10 @@ void Solution::run() {
                     tracer_buffer[i][2] = tracer_buffer[tracer_pointer][2];
                     tracer_buffer[i][3] = tracer_buffer[tracer_pointer][3];
                     --tracer_pointer;
+                }
+                else {
+                    ++tracer_buffer[i][2];
+                    ++i;
                 }
             }
             else
@@ -483,12 +475,6 @@ void Solution::run() {
                 RCS_sum = RCS_sum + curFrameData[sortedIdx[j]].RCS; RCS_mean = RCS_sum / tmpCnt;
                 BlockIndex[j] = true; // 匹配成功的数据点，将被拿走
                 ++j;
-            }
-            if (!coupleFlag) {  // 说明只有单个有效的雷达数据点被探测到
-                if (curFrameData[sortedIdx[jStart]].RCS < RCSMinSingle)
-                    BlockIndex[jStart] = true;
-                else
-                    coupleFlag = true;  // 单个有效雷达数据点也暂时纳入跟踪队列
             }
             if (coupleFlag) {
                 BlockIndex[jStart] = true;
