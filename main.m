@@ -42,6 +42,7 @@ RCSMinSingle = 10;  % 当只有一个有效的雷达数据点被探测到时，�
 carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
 interpolationLimCnt = 1;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
 interpolationLimM = 400;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
+maxFailTime = 5;       % 允许追踪失败的最大次数
 
 cnt = 1;
 lastTime = 0;
@@ -109,7 +110,8 @@ for cnt = 1 : n_Gap
                 j = j + 1; continue;
             end
             v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2);   % 计算车辆的实际速度，默认车辆沿着车道方向行驶
-            if abs(curFrameData(j, 3) - (carDisLog + deltaT * v_true * cosTheta2)) > maxVarX
+            X_predict = carDisLog + deltaT * v_true * cosTheta2;    % 车辆的预测纵向位置
+            if abs(curFrameData(j, 3) - X_predict) > maxVarX
                 j = j + 1; continue;
             end
 
@@ -144,6 +146,10 @@ for cnt = 1 : n_Gap
             end
             data_idx = data_idx + 1;
             RadarDataID = frameStart + OKIndex(jStart);
+            if sp_mean == 0
+                X_mean = carDisLog;
+                Y_mean = carDisLat;
+            end
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
@@ -156,7 +162,7 @@ for cnt = 1 : n_Gap
             break;
         end
         if coupleFlag == 0      % 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
-            if tracer_buffer(i, 3) > 5
+            if tracer_buffer(i, 3) > maxFailTime
                 if tracer_buffer(i, 4) == 1 % 初始追踪一次就失败的，将从最终输出队列中删除
                     removeFlag(dataID) = 1;
                 end
@@ -179,6 +185,9 @@ for cnt = 1 : n_Gap
     while j <= OKIndexPointer_len
         if BlockIndex(j)
             j = j + 1; continue;
+        end
+        if curFrameData(j, 5) == 0
+            BlockIndex(j) = 1; j = j + 1;  continue;
         end
 
         % 在数据中认为有可能发现车辆
