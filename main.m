@@ -34,7 +34,7 @@ maxCarX = 10;   % 预设车辆长度为maxCarXm
 maxCarY = 2;    % 预设车辆宽度为maxCarYm
 [maxVarX, maxVarY] = getMaxVarX_MaxVarY(maxCarX, maxCarY, theta2);  % 设置同一辆车的在前后帧的在车道上的最大纵向距离偏差和最大横向距离偏差
 
-maxVarRCS = 15; % 设置同一辆车的在前后帧的RCS偏差
+maxVarRCS = 1500; % 设置同一辆车的在前后帧的RCS偏差
 RadarHeight = 7;    % 雷达高度
 RCSMin = 0;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
@@ -135,6 +135,9 @@ for cnt = 1 : n_Gap
                     j = j + 1; continue;
                 end
                 if abs(sp_mean - curFrameData(j, 5)) > carSpeedVar
+                    j = j + 1; continue;
+                end
+                if (abs(RCS_mean - curFrameData(j, 6))) > maxVarRCS
                     j = j + 1; continue;
                 end
                 if curFrameData(j, 3) < Xmin
@@ -257,4 +260,4 @@ end
 final_data = all_res(1 : data_idx, 1:14);
 removeFlag = removeFlag(1 : data_idx);
 final_data = final_data(removeFlag == 0, :);
-% writematrix(final_data, 'result.csv')
+writematrix(final_data, 'result.csv')
