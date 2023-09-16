@@ -55,12 +55,11 @@ for i = 1 : n_radar_data
     cnt = cnt + 1;
 end
 cnt2 = 0;
-singleTar = zeros(15000, 7);
 
 tracer_buffer = zeros(1000, 4); % 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
 tracer_pointer = 0; % tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
 data_idx = 0;
-all_res = zeros(n_radar_data, 15);
+all_res = zeros(n_radar_data, 16);
 removeFlag = zeros(n_radar_data, 1);    % 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
 carUniqueId = -1;
 for cnt = 1 : n_Gap
@@ -94,6 +93,7 @@ for cnt = 1 : n_Gap
         carRCS = all_res(dataID, 7);
         carClass = all_res(dataID, 8);
         deltaT = nowT - all_res(dataID, 1);
+        maxCarLen = all_res(dataID, 16);
         coupleFlag = 0; j = 1;  % j指向curFrameData数据中的数据点
 
         while j <= OKIndexPointer_len  % 在OKIndex里寻找能与正在追踪的车辆匹配的点，找到之后，把它从OKIndex中删除
@@ -121,6 +121,7 @@ for cnt = 1 : n_Gap
             Y_mean = curFrameData(j, 4);  Y_sum = Y_mean;
             sp_mean = curFrameData(j, 5); sp_sum = sp_mean;
             RCS_mean = curFrameData(j, 6);RCS_sum = RCS_mean;
+            Xmin = X_mean; Xmax = X_mean;
             BlockIndex(j) = 1;    % 匹配成功的数据点，将被拿走
             jStart = j; j = j + 1; tmpCnt = 1;
             while (j <= OKIndexPointer_len)
@@ -135,6 +136,16 @@ for cnt = 1 : n_Gap
                 end
                 if abs(sp_mean - curFrameData(j, 5)) > carSpeedVar
                     j = j + 1; continue;
+                end
+                if curFrameData(j, 3) < Xmin
+                    Xmin = curFrameData(j, 3);
+                end
+                if curFrameData(j, 3) > Xmax
+                    Xmax = curFrameData(j, 3);
+                end
+                carLen = (Xmax - Xmin) / cosTheta2;
+                if maxCarLen < carLen
+                    maxCarLen = carLen;
                 end
                 tmpCnt = tmpCnt + 1;
                 X_sum = X_sum + curFrameData(j, 3);   X_mean = X_sum / tmpCnt;       
@@ -152,7 +163,7 @@ for cnt = 1 : n_Gap
             end
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
-                carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
+                theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen,...
                 kAti, bAti, RadarDataID);
             % 更新在缓冲区的数据
             tracer_buffer(i, 1) = data_idx;
@@ -228,16 +239,11 @@ for cnt = 1 : n_Gap
             BlockIndex(jStart) = 1;
             data_idx = data_idx + 1;
             carUniqueId = carUniqueId + 1;
-            carLen = (Xmax - Xmin) / cosTheta2;
-            if carLen < 7.5
-                carClass = 0;
-            else
-                carClass = 1;
-            end
+            maxCarLen = (Xmax - Xmin) / cosTheta2;
             RadarDataID = frameStart + OKIndex(jStart);
             all_res(data_idx, :) = writeResult(nowT, carUniqueId, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, Y_mean, RCS_mean, ...
-                carClass, theta0, latitudeMean, ori_longitude, ori_latitude, ...
+                theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen, ...
                 kAti, bAti, RadarDataID);
             tracer_pointer = tracer_pointer + 1;
             tracer_buffer(tracer_pointer, 1) = data_idx;
@@ -251,4 +257,4 @@ end
 final_data = all_res(1 : data_idx, 1:14);
 removeFlag = removeFlag(1 : data_idx);
 final_data = final_data(removeFlag == 0, :);
-writematrix(final_data, 'result.csv')
+% writematrix(final_data, 'result.csv')
