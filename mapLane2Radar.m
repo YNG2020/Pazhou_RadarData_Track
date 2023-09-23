@@ -1,4 +1,13 @@
 function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
+    global A Q R H P P_posterior
+    % 卡尔曼滤波器
+    A = [1 1; 0 1];    % 状态转移矩阵，上一时刻的状态转移到当前时刻
+    Q = [0.5 0; 0 0.01];   % 过程噪声协方差矩阵Q，p(w)~N(0,Q)，噪声来自真实世界中的不确定性
+    R = [4 0; 0 0.04];  % 观测噪声协方差矩阵R，p(v)~N(0,R)
+    H = [1 0; 0 1]; % 状态观测矩阵
+    P = R;
+    P_posterior = P;
+
     n_Gap = length(unique(RadarData(:,1)));  % 预先算出帧数，以预先进行内存分配
     radarFrameTime = zeros(n_Gap, 1); % 雷达数据中不同帧的时间
     radarFrameTimeIdx = zeros(n_Gap, 1);    % 雷达数据中不同帧的时间对应的第一个下标
@@ -91,9 +100,6 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
         [sort_sp_gap, idx] = sort(abs(sp_gap), 'ascend');
         
         OKFLAG = 0;
-        if (cnt == 1039 && n_map == 1050)
-            a = 1;
-        end
 
         %%%%%%%%%%% 第一检验条件：如果能找到速度相近，且距离上一个OK的点的距离小于5m的两个点，则视作成功找到对应点
         for j = 1 : n_Frame
@@ -108,27 +114,27 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
                     % if cnt == 1 || (RadarData(tmpDotIdx, 3) - LaneRadarTrack(LastOKIDX, 2))^2 + (RadarData(tmpDotIdx, 4) - LaneRadarTrack(LastOKIDX, 3))^2 < 25
                     if cnt == 1 || (RadarData(tmpDotIdx, 3) - predict_x)^2 + (RadarData(tmpDotIdx, 4) - predict_y)^2 < 25 && RadarData(tmpDotIdx, 6) > 0
                         OKFLAG = 1;
-                        lastLastOKIdx = LastOKIDX;
-                        LastOKIDX = cnt;
                         DotIdx = tmpDotIdx;
                         % 该部分用于检测径向速度相近且位置接近的雷达数据
-                        [all_radar_x(cnt, :), all_radar_y(cnt, :)] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx);
+                        [all_radar_x(cnt, :), all_radar_y(cnt, :), sp_mean] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, LaneRadarTrack, LastOKIDX);
+                        lastLastOKIdx = LastOKIDX;
+                        LastOKIDX = cnt;
                         break;
                     end
                 end
             end
         end
 
-        %%%%%%%%%%% 第二检验条件：如果能找距离上一个OK的点的距离小于5m或7m的点，则视作成功找到对应点
+        %%%%%%%%%% 第二检验条件：如果能找距离上一个OK的点的距离小于5m或7m的点，则视作成功找到对应点
         if cnt == 1 && ~OKFLAG
             DotIdx = radarFrameTimeIdx(Lane2FrameIdx(i)) + idx(1) - 1;
             [predict_x, predict_y] = predict_lot(LastOKIDX, DotIdx, RadarData, LaneRadarTrack, lastLastOKIdx);
             % 该部分用于检测径向速度相近且位置接近的雷达数据
-            [all_radar_x(cnt, :), all_radar_y(cnt, :)] = find_relate_data(i, 1, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx);
+            [all_radar_x(cnt, :), all_radar_y(cnt, :), sp_mean] = find_relate_data(i, 1, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, LaneRadarTrack, LastOKIDX);
             LastOKIDX = cnt;
             OKFLAG = 1;
         elseif ~OKFLAG        % 如果下一个点与上一个点的距离小于5m，则接受这个点
-            for limit = [25 50]
+            for limit = [25]
                 if OKFLAG
                     break;
                 else
@@ -141,7 +147,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
                             OKFLAG = 1;
                             DotIdx = tmpDotIdx;
                             % 该部分用于检测径向速度相近且位置接近的雷达数据
-                            [all_radar_x(cnt, :), all_radar_y(cnt, :)] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx);
+                            [all_radar_x(cnt, :), all_radar_y(cnt, :), sp_mean] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, LaneRadarTrack, LastOKIDX);
                             break;
                         end
                     end
@@ -149,7 +155,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
             end
         end
 
-        %%%%%%%%%%% 第三检验条件：如果一直找不到下一个点，则直接取路径前进方向上的，距离上一个OK的点距离最小的点
+        %%%%%%%%%% 第三检验条件：如果一直找不到下一个点，则直接取路径前进方向上的，距离上一个OK的点距离最小的点
         if OKFLAG == 0
             min_dist = 1000000;
             min_idx = 1;
@@ -168,9 +174,14 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
             end
             DotIdx = radarFrameTimeIdx(Lane2FrameIdx(i)) + min_idx - 1;
             % 该部分用于检测径向速度相近且位置接近的雷达数据
-            [all_radar_x(cnt, :), all_radar_y(cnt, :)] = find_relate_data(i, min_idx, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx);
-            
+            [all_radar_x(cnt, :), all_radar_y(cnt, :), sp_mean] = find_relate_data(i, min_idx, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, LaneRadarTrack, LastOKIDX);
+            OKFLAG = 1;
         end
+        if OKFLAG == 0
+            cnt = cnt + 1;
+            continue;
+        end
+
         
         tmp_predict_x(cnt) = predict_x;
         tmp_predict_y(cnt) = predict_y;
@@ -184,7 +195,7 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
         LaneRadarTrack(cnt, 7) = Lane(i, 7);    % 写入东向速度
         LaneRadarTrack(cnt, 8) = Lane_sp(i);    % 写入速度
         LaneRadarTrack(cnt, 13) = v_true_cal(all_radar_x(cnt, 7), all_radar_y(cnt, 7), 7, RadarData(DotIdx, 5), 1); % 写入真实速度;
-        LaneRadarTrack(cnt, 9) = RadarData(DotIdx, 5); % 写入径向速度;
+        LaneRadarTrack(cnt, 9) = sp_mean; % 写入径向速度;
         LaneRadarTrack(cnt, 10) = RadarData(radarFrameTimeIdx(Lane2FrameIdx(i)), 1);    % 写入时间
         LaneRadarTrack(cnt, 11) = RadarData(DotIdx, 6);    % 写入RCS
         LaneRadarTrack(cnt, 12) = LaneRadarTrack(cnt, 9) - LaneRadarTrack(cnt, 8);    % 写入速度差1
@@ -194,10 +205,13 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane)
     end
 end
 
-function [radar_x, radar_y] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx)
+function [radar_x, radar_y, sp_mean] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, LaneRadarTrack, LastOKIDX)
+    global A Q R H P P_posterior
     % 该部分用于检测径向速度相近且位置接近的雷达数据
     radar_x = zeros(1, 7);
     radar_y = zeros(1, 7);
+    sp_mean = RadarData(DotIdx, 5);
+    speedSum = RadarData(DotIdx, 5);
     radar_x(1) = RadarData(DotIdx, 3);
     radar_y(1) = RadarData(DotIdx, 4);
     tmp_cnt = 1;
@@ -212,7 +226,8 @@ function [radar_x, radar_y] = find_relate_data(i, j, RadarData, radarFrameTimeId
     while (j < n_Frame && abs(sp_last - RadarData(tmpDotIdx1, 5)) < 0.001)
 
         if (RadarData(tmpDotIdx1, 3) - radar_x(7))^2 + (RadarData(tmpDotIdx1, 4) - radar_y(7))^2 < 25
-
+            
+            speedSum = speedSum + RadarData(tmpDotIdx1, 5);
             radar_x(tmp_cnt) = RadarData(tmpDotIdx1, 3);
             radar_y(tmp_cnt) = RadarData(tmpDotIdx1, 4);
             radar_x(7) = sum(radar_x(1 : tmp_cnt)) / tmp_cnt;
@@ -225,6 +240,33 @@ function [radar_x, radar_y] = find_relate_data(i, j, RadarData, radarFrameTimeId
         j = j + 1;
         tmpDotIdx1 = radarFrameTimeIdx(Lane2FrameIdx(i)) + idx(j) - 1;
     end
+
+    if LastOKIDX > 1
+        sp_mean = speedSum / (tmp_cnt - 1);
+        % ----------------------进行先验估计---------------------
+        deltaT = RadarData(DotIdx, 1) - LaneRadarTrack(LastOKIDX, 10);
+        A = [1 deltaT; 0 1];
+        carDisLog = LaneRadarTrack(LastOKIDX, 2);
+        carSpeed = LaneRadarTrack(LastOKIDX, 9);
+        X_prior = A * [carDisLog; carSpeed];
+        % 计算状态估计协方差矩阵P
+        P_prior = A * P_posterior * A' + Q;
+        % ----------------------计算卡尔曼增益
+        R = [9 0; 0 0];  % 观测噪声协方差矩阵R，p(v)~N(0,R)
+        K = P_prior * H' * inv(H * P_prior * H' + R);
+        % ---------------------后验估计------------
+        Z_measure = zeros(2, 1);
+        Z_measure(1) = radar_x(7);
+        Z_measure(2) = sp_mean;
+        X_posterior = X_prior + K * (Z_measure - H * X_prior);
+        X_mean = X_posterior(1);
+        sp_mean = X_posterior(2);
+        % 更新状态估计协方差矩阵P
+        P_posterior = (eye(2, 2) - K * H) * P_prior;
+
+        radar_x(7) = X_mean;
+    end
+    
     radar_x(6) = tmp_cnt - 1;
     radar_y(6) = tmp_cnt - 1;
 end

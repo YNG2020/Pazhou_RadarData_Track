@@ -1,4 +1,15 @@
 % 此部分尽量用C++风格写matlab
+% 卡尔曼滤波器
+deltat = 1;
+A = [1 deltat; 0 1];    % 状态转移矩阵，上一时刻的状态转移到当前时刻
+Q = [0.5 0; 0 0.01];   % 过程噪声协方差矩阵Q，p(w)~N(0,Q)，噪声来自真实世界中的不确定性
+R = [4 0; 0 0.04];  % 观测噪声协方差矩阵R，p(v)~N(0,R)
+H = [1 0; 0 1]; % 状态观测矩阵
+P = R;
+P_posterior = P;
+LaneRadarTrack1 = LaneRadarTrack1(~isnan(LaneRadarTrack1(:, 1)), :);
+LaneRadarTrack2 = LaneRadarTrack2(~isnan(LaneRadarTrack2(:, 2)), :);
+LaneRadarTrack3 = LaneRadarTrack3(~isnan(LaneRadarTrack3(:, 3)), :);
 [k1, b1] = line_plofit(LaneRadarTrack1(:, 2), LaneRadarTrack1(:, 3));
 [k2, b2] = line_plofit(LaneRadarTrack2(:, 2), LaneRadarTrack2(:, 3));
 [k3, b3] = line_plofit(LaneRadarTrack3(:, 2), LaneRadarTrack3(:, 3));
@@ -11,7 +22,7 @@ arcTan2 = atan(tan2);
 arcTan3 = atan(tan3);
 theta1 = mean([arcTan1; arcTan2; arcTan3]); % 经纬度与雷达坐标系之间的角度偏差
 theta2 = atan(k);   % 车道与雷达坐标系之间的角度偏差
-theta0 = theta1 - theta2;   % 经纬度与车道之间的角度偏差
+theta0 = theta1 - theta2 + 0.003121;   % 经纬度与车道之间的角度偏差
 latitudeMean = mean([LaneRadarTrack1(:, 4); LaneRadarTrack2(:, 4); LaneRadarTrack3(:, 4)]); % 平均纬度
 [ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
 [b_left, b_right] = get_intercept(k, b1, b3);
@@ -56,6 +67,7 @@ for i = 1 : n_radar_data
 end
 cnt2 = 0;
 
+tracer_Pbuffer = zeros(1000, 2);
 tracer_buffer = zeros(1000, 4); % 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
 tracer_pointer = 0; % tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
 data_idx = 0;
@@ -94,6 +106,7 @@ for cnt = 1 : n_Gap
         carClass = all_res(dataID, 8);
         deltaT = nowT - all_res(dataID, 1);
         maxCarLen = all_res(dataID, 16);
+        P_posterior = tracer_Pbuffer(1 : 2, i * 2 - 1 : i * 2);
         coupleFlag = 0; j = 1;  % j指向curFrameData数据中的数据点
 
         while j <= OKIndexPointer_len  % 在OKIndex里寻找能与正在追踪的车辆匹配的点，找到之后，把它从OKIndex中删除
@@ -164,6 +177,25 @@ for cnt = 1 : n_Gap
                 X_mean = carDisLog;
                 Y_mean = carDisLat;
             end
+            
+            % ----------------------进行先验估计---------------------
+            A = [1 deltaT; 0 1];
+            X_prior = A * [carDisLog; carSpeed];
+            % 计算状态估计协方差矩阵P
+            P_prior = A * P_posterior * A' + Q;
+            % ----------------------计算卡尔曼增益
+            R = [max(maxCarLen * maxCarLen / 4, 9) 0; 0 0];  % 观测噪声协方差矩阵R，p(v)~N(0,R)
+            K = P_prior * H' * inv(H * P_prior * H' + R);
+            % ---------------------后验估计------------
+            Z_measure = zeros(2, 1);
+            Z_measure(1) = X_mean;
+            Z_measure(2) = sp_mean;
+            X_posterior = X_prior + K * (Z_measure - H * X_prior);
+            X_mean = X_posterior(1);
+            sp_mean = X_posterior(2);
+            % 更新状态估计协方差矩阵P
+            P_posterior = (eye(2, 2) - K * H) * P_prior;
+
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen,...
@@ -173,6 +205,7 @@ for cnt = 1 : n_Gap
             tracer_buffer(i, 2) = RadarDataID;
             tracer_buffer(i, 3) = 0;    % 连续追踪失败次数归零
             tracer_buffer(i, 4) = tracer_buffer(i, 4) + 1;
+            tracer_Pbuffer(1 : 2, i * 2 - 1 : i * 2) = P_posterior;
             break;
         end
         if coupleFlag == 0      % 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
@@ -184,6 +217,7 @@ for cnt = 1 : n_Gap
                 tracer_buffer(i, 2) = tracer_buffer(tracer_pointer, 2);
                 tracer_buffer(i, 3) = tracer_buffer(tracer_pointer, 3);
                 tracer_buffer(i, 4) = tracer_buffer(tracer_pointer, 4);
+                tracer_Pbuffer(1 : 2, i * 2 - 1 : i * 2) = tracer_Pbuffer(1 : 2, tracer_pointer * 2 - 1 : tracer_pointer * 2);
                 tracer_pointer = tracer_pointer - 1;
             else
                 tracer_buffer(i, 3) = tracer_buffer(i, 3) + 1;  % 连续追踪失败次数+1
@@ -253,6 +287,7 @@ for cnt = 1 : n_Gap
             tracer_buffer(tracer_pointer, 2) = RadarDataID; 
             tracer_buffer(tracer_pointer, 3) = 0;
             tracer_buffer(tracer_pointer, 4) = 1;
+            tracer_Pbuffer(1 : 2, tracer_pointer * 2 - 1 : tracer_pointer * 2) = P_posterior;
         end
         j = jStart + 1;
     end
@@ -260,4 +295,6 @@ end
 final_data = all_res(1 : data_idx, 1:14);
 removeFlag = removeFlag(1 : data_idx);
 final_data = final_data(removeFlag == 0, :);
+final_data2 = all_res(1 : data_idx, :);
+final_data2 = all_res(removeFlag == 0, :);
 writematrix(final_data, 'result.csv')
