@@ -16,7 +16,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
     radarFrameTime[0] = RadarData[0].timestamp;
     radarFrameTimeIdx[0] = 0;
 
-    int n_RadarData = size(RadarData);  // 雷达数据总数
+    int n_RadarData = RadarData.size();  // 雷达数据总数
     for (int i = 1, cnt = 1; i < n_RadarData; ++i) {
         if (RadarData[i].timestamp == radarFrameTime[cnt-1])
             continue;
@@ -283,8 +283,9 @@ void Solution::run() {
     double RCSMinZero = 10.0;   // 当雷达数据点的径向速度为0时，允许的最小RCS
     double RCSMinSingle = 10.0; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
     double carSpeedVar = 0.1;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
-    int interpolationLimCnt = 2;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
-    int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧
+    int interpolationLimCnt = 1;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
+    int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧4
+    int maxFailTime = 5;        // 允许追踪失败的最大次数
     // ****************************************************************************************
 
     double lastTime = 0;
@@ -296,11 +297,12 @@ void Solution::run() {
         ++cnt;
     }
 
-    vector<vector<int>> tracer_buffer(1000, vector<int>(4, 0)); // 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
+    vector<vector<int>> tracer_buffer(500, vector<int>(4, 0)); // 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
     int tracer_pointer = -1;     // tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
     int data_idx = -1;
-    vector<res> all_res(n_radar_data / 2);
-    vector<bool> removeFlag(n_radar_data / 2, false);   // 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
+    vector<res> all_res(n_radar_data / 10);         // 记录全体结果
+    vector<float> maxCarsLen(n_radar_data / 10);    // 记录最大车长信息
+    vector<bool> removeFlag(n_radar_data / 10, false);   // 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
     int carUniqueId = -1;
     for (int cnt = 0; cnt < n_Gap; ++cnt) {
         int frameStart = frameGapIdx[cnt];  // 当前帧的在雷达数据的起始位
@@ -352,6 +354,7 @@ void Solution::run() {
             double carRCS = all_res[dataID].Object_RCS;
             int carClass = all_res[dataID].Object_Class;
             double deltaT = nowT - all_res[dataID].Timestamp;
+            float maxCarLen = maxCarsLen[dataID];
             bool coupleFlag = false;
             int j = 0;  // j指向curFrameData数据中的数据点
 
@@ -369,7 +372,8 @@ void Solution::run() {
                     ++j; continue;
                 }
                 double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // 计算车辆的实际速度，默认车辆沿着车道方向行驶
-                if (abs(curFrameData[sortedIdx[j]].DistLong - (carDisLog + deltaT * v_true * cosTheta2)) > maxVarX) {
+                double X_predict = carDisLog + deltaT * v_true * cosTheta2;    // 车辆的预测纵向位置
+                if (abs(curFrameData[sortedIdx[j]].DistLong - X_predict) > maxVarX) {
                     ++j; continue;
                 }
 
@@ -379,6 +383,7 @@ void Solution::run() {
                 double Y_mean = curFrameData[sortedIdx[j]].DistLat;  double Y_sum = Y_mean;
                 double sp_mean = curFrameData[sortedIdx[j]].VeloRadial; double sp_sum = sp_mean;
                 double RCS_mean = curFrameData[sortedIdx[j]].RCS; double RCS_sum = RCS_mean;
+                double Xmin = X_mean, Xmax = X_mean;
                 BlockIndex[j] = true;   // 匹配成功的数据点，将被拿走
                 int jStart = j, tmpCnt = 1;
                 ++j;
@@ -395,6 +400,16 @@ void Solution::run() {
                     if (abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
                         ++j; continue;
                     }
+                    if (abs(RCS_mean - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
+                        ++j; continue;
+                    }
+                    if (curFrameData[sortedIdx[j]].DistLong < Xmin)
+                        Xmin = curFrameData[sortedIdx[j]].DistLong;
+                    if (curFrameData[sortedIdx[j]].DistLong > Xmax)
+                        Xmax = curFrameData[sortedIdx[j]].DistLong;
+                    float carLen = (Xmax - Xmin) / cosTheta2;
+                    if (maxCarLen < carLen)
+                        maxCarLen = carLen;
                     ++tmpCnt;
                     X_sum = X_sum + curFrameData[sortedIdx[j]].DistLong;   X_mean = X_sum / tmpCnt;
                     Y_sum = Y_sum + curFrameData[sortedIdx[j]].DistLat;   Y_mean = Y_sum / tmpCnt;
@@ -405,28 +420,21 @@ void Solution::run() {
                 }
                 ++data_idx;
                 int RadarDataID = frameStart + OKIndex[sortedIdx[jStart]];
-                writeSingleResult(nowT, carID, X_mean, Y_mean, carDisLat, RadarHeight, sp_mean, RCS_mean, carClass, RadarDataID, all_res, data_idx);
+                if (sp_mean == 0) {
+                    X_mean = carDisLog;
+                    Y_mean = carDisLat;
+                }
+                maxCarsLen[data_idx] = maxCarLen;
+                writeSingleResult(nowT, carID, X_mean, Y_mean, carDisLat, RadarHeight, sp_mean, RCS_mean, RadarDataID, all_res, data_idx, maxCarLen);
                 // 更新在缓冲区的数据
                 tracer_buffer[i][0] = data_idx;
                 tracer_buffer[i][1] = RadarDataID;
-                tracer_buffer[i][2] = 0;
+                tracer_buffer[i][2] = 0;    // 连续追踪失败次数归零
                 ++tracer_buffer[i][3];
                 break;
             }
-            if (!coupleFlag) {  // 匹配失败，先试着用预测来补帧，如果持续失败，该跟踪数据从缓冲区中被移除。同时，初始追踪一次就失败的，不进行补帧
-                if (tracer_buffer[i][3] > 1 && tracer_buffer[i][2] < interpolationLimCnt && carDisLog < interpolationLimM && carSpeed != 0) {
-                    ++data_idx;
-                    int RadarDataID = radarDataID;
-                    double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // 计算车辆的实际速度，默认车辆沿着车道方向行驶
-                    double carX = carDisLog + deltaT * v_true * cosTheta2;
-                    double carY = carDisLat;
-                    writeSingleResult(nowT, carID, carX, carY, carDisLat, RadarHeight, carSpeed, carRCS, carClass, RadarDataID, all_res, data_idx);
-                    tracer_buffer[i][0] = data_idx;
-                    tracer_buffer[i][1] = RadarDataID;
-                    ++tracer_buffer[i][2];
-                    ++i;
-                }
-                else {
+            if (!coupleFlag) {  // 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
+                if (tracer_buffer[i][2] > maxFailTime) {
                     if (tracer_buffer[i][3] == 1)   // 初始追踪一次就失败的，将从最终输出队列中删除
                         removeFlag[dataID] = true;
                     tracer_buffer[i][0] = tracer_buffer[tracer_pointer][0];
@@ -434,6 +442,10 @@ void Solution::run() {
                     tracer_buffer[i][2] = tracer_buffer[tracer_pointer][2];
                     tracer_buffer[i][3] = tracer_buffer[tracer_pointer][3];
                     --tracer_pointer;
+                }
+                else {
+                    ++tracer_buffer[i][2];
+                    ++i;
                 }
             }
             else
@@ -445,6 +457,9 @@ void Solution::run() {
         while (j < OKIndexPointer_len) {
             if (BlockIndex[j]) {
                 ++j; continue;
+            }
+            if (curFrameData[sortedIdx[j]].VeloRadial == 0) {
+                BlockIndex[j] = 1; ++j;  continue;
             }
 
             // 在数据中认为有可能发现车辆
@@ -484,24 +499,14 @@ void Solution::run() {
                 BlockIndex[j] = true; // 匹配成功的数据点，将被拿走
                 ++j;
             }
-            if (!coupleFlag) {  // 说明只有单个有效的雷达数据点被探测到
-                if (curFrameData[sortedIdx[jStart]].RCS < RCSMinSingle)
-                    BlockIndex[jStart] = true;
-                else
-                    coupleFlag = true;  // 单个有效雷达数据点也暂时纳入跟踪队列
-            }
             if (coupleFlag) {
                 BlockIndex[jStart] = true;
                 ++data_idx;
                 ++carUniqueId;
-                double carLen = (Xmax - Xmin) / cosTheta2;
-                int carClass;
-                if (carLen < 7.5)
-                    carClass = 0;
-                else
-                    carClass = 1;
+                float maxCarLen = (Xmax - Xmin) / cosTheta2;
+                maxCarsLen[data_idx] = maxCarLen;
                 int RadarDataID = frameStart + OKIndex[sortedIdx[jStart]];
-                writeSingleResult(nowT, carUniqueId, X_mean, Y_mean, Y_mean, RadarHeight, sp_mean, RCS_mean, carClass, RadarDataID, all_res, data_idx);
+                writeSingleResult(nowT, carUniqueId, X_mean, Y_mean, Y_mean, RadarHeight, sp_mean, RCS_mean, RadarDataID, all_res, data_idx, maxCarLen);
                 ++tracer_pointer;
                 tracer_buffer[tracer_pointer][0] = data_idx;
                 tracer_buffer[tracer_pointer][1] = RadarDataID;
@@ -511,11 +516,11 @@ void Solution::run() {
             j = jStart + 1;
         }
     }
-    res::writeResult("result.csv", all_res, removeFlag);
+     res::writeResult("result.csv", all_res, removeFlag);
 }
 
 // 写下单条结果
-void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int carClass, int RadarDataID, vector<res>& all_res, int data_idx) {
+void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int RadarDataID, vector<res>& all_res, int data_idx, float maxCarLen) {
     all_res[data_idx].Timestamp = nowT;
     all_res[data_idx].Object_ID = carUniqueId;
     all_res[data_idx].Object_DistLong = X_mean;
@@ -530,13 +535,16 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
         all_res[data_idx].Object_VeloLat = -abs(sp_true * sinTheta2);
 
     all_res[data_idx].Object_RCS = RCS_mean;
-    all_res[data_idx].Object_Class = carClass;
+    if (maxCarLen < 7.5)
+        all_res[data_idx].Object_Class = 0;
+    else
+        all_res[data_idx].Object_Class = 1;
     double longitude = 0.0, latitude = 0.0;
     getCoordinate(X_mean, Y_mean, longitude, latitude);
     all_res[data_idx].Object_Latitude = latitude;
     all_res[data_idx].Object_Longitude = longitude;
     all_res[data_idx].Object_Altitude = kAti * X_mean + bAti;
-    if (sp_true == 0)
+    if (abs(sp_true) < 2)
         all_res[data_idx].Object_parking = 1;
     else
         all_res[data_idx].Object_parking = 0;
@@ -560,54 +568,6 @@ void Solution::getCoordinate(double distLong, double distLati, double& longitude
     double southDeg = latitude_gap_per_meter * (distLong * sin(theta0) + distLati * cos(theta0));
     longitude = ori_longitude - westDeg;
     latitude = ori_latitude - southDeg;
-}
-
-// 字符串转小数1
-inline double str2double(std::string& str) {
-    double num = 0;
-    int index = 0;
-    int flag = 1;
-    if (str[index] == '-') {
-        flag = -1;
-        index++;
-    }
-    while (index < str.size() && str[index] != '.') {
-        num = num * 10 + str[index] - '0';
-        index++;
-    }
-    index++;
-    double point = 0.1;
-    while (index < str.size()) {
-        num = num + point * (str[index] - '0');
-        point = point * 0.1;
-        index++;
-    }
-    return num * flag;
-}
-
-// 字符串转小数2
-inline double str2double(std::string& str, int& index) {
-    double num = 0;
-    int flag = 1;
-    if (str[index] == '-') {
-        flag = -1;
-        index++;
-    }
-    while (str[index] != ',' && str[index] != '.') {
-        num = num * 10 + str[index] - '0';
-        index++;
-    }
-    if (str[index] == ',') {
-        return num * flag;
-    }
-    index++;
-    double point = 0.1;
-    while (str[index] != ',') {
-        num = num + point * (str[index] - '0');
-        point = point * 0.1;
-        index++;
-    }
-    return num * flag;
 }
 
 // GPST时间转换为UNIX时间

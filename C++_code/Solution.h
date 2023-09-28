@@ -9,10 +9,54 @@ struct targetInfo;
 struct res;
 using std::vector;
 
+
 // 字符串转小数1
-extern inline double str2double(std::string& str);
+inline double str2double(std::string& str) {
+    double num = 0;
+    int index = 0;
+    int flag = 1;
+    if (str[index] == '-') {
+        flag = -1;
+        index++;
+    }
+    while (index < str.size() && str[index] != '.') {
+        num = num * 10 + str[index] - '0';
+        index++;
+    }
+    index++;
+    double point = 0.1;
+    while (index < str.size()) {
+        num = num + point * (str[index] - '0');
+        point = point * 0.1;
+        index++;
+    }
+    return num * flag;
+}
+
 // 字符串转小数2
-extern inline double str2double(std::string& str, int& index);
+inline double str2double(std::string& str, int& index) {
+    double num = 0;
+    int flag = 1;
+    if (str[index] == '-') {
+        flag = -1;
+        index++;
+    }
+    while (str[index] != ',' && str[index] != '.') {
+        num = num * 10 + str[index] - '0';
+        index++;
+    }
+    if (str[index] == ',') {
+        return num * flag;
+    }
+    index++;
+    double point = 0.1;
+    while (str[index] != ',') {
+        num = num + point * (str[index] - '0');
+        point = point * 0.1;
+        index++;
+    }
+    return num * flag;
+}
 // GPST时间转换为UNIX时间
 extern double GPST2UNIX(int weeks, double second_in_weeks);
 // 预测车辆在下一帧出现的位置，将历史速度与当前速度做一个权衡，用权衡后的速度乘以经过的时间，加上原本的位置，即得到预测位置
@@ -64,7 +108,7 @@ public:
 
 	void init();	/**< 初始化程序*/
 	void run();		/**< 主算法*/
-	void writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int carClass, int RadarDataID, vector<res>& all_res, int data_idx);	/**< 写下单条结果*/
+	void writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int RadarDataID, vector<res>& all_res, int data_idx, float maxCarLen);	/**< 写下单条结果*/
 	vector<vector<double>> mapLane2Radar(vector<rtk>::iterator begin, vector<rtk>::iterator end);	/**< 创建标定数据与雷达数据之间的映射*/
 	void getCoordinate(double distLong, double distLati, double& longitude, double& latitude);	/**< 根据横距纵向距离与横向距离，获得相应的经纬度坐标*/
 };

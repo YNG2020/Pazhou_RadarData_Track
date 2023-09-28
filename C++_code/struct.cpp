@@ -7,6 +7,7 @@
 #include "Solution.h"
 
 void rtk::readRtk(const char* rtkPath, std::vector<rtk>& rtkline) {
+    rtkline.reserve(11000);
     std::ifstream inputFile(rtkPath); // 打开一个文件流并指定文件名
     std::string line;
     while (std::getline(inputFile, line)) { // 逐行读取文件内容
@@ -45,6 +46,7 @@ void rtk::readRtk(const char* rtkPath, std::vector<rtk>& rtkline) {
 }
 
 int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& RadarData) {
+    RadarData.reserve(3000000);
     std::ifstream inputFile(RadarDataPath); // 打开一个文件流并指定文件名
 
     int frameCnt = 0;
@@ -106,7 +108,7 @@ void res::writeResult(const std::string& Path, std::vector<res>& Result, const s
         outFile << re.Object_parking << ",";
         outFile << re.Object_retrograde << ",";
         outFile << re.Object_overspeed;
-        outFile << std::endl;
+        outFile << "\n";
     }
     // 关闭文件流
     outFile.close();
