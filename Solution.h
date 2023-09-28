@@ -108,7 +108,7 @@ public:
 
 	void init();	/**< 初始化程序*/
 	void run();		/**< 主算法*/
-	void writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int carClass, int RadarDataID, vector<res>& all_res, int data_idx);	/**< 写下单条结果*/
+	void writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int RadarDataID, vector<res>& all_res, int data_idx, float maxCarLen);	/**< 写下单条结果*/
 	vector<vector<double>> mapLane2Radar(vector<rtk>::iterator begin, vector<rtk>::iterator end);	/**< 创建标定数据与雷达数据之间的映射*/
 	void getCoordinate(double distLong, double distLati, double& longitude, double& latitude);	/**< 根据横距纵向距离与横向距离，获得相应的经纬度坐标*/
 };
