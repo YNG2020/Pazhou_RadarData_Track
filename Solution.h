@@ -64,7 +64,7 @@ extern void predict_lot(int LastOKIDX, int tmpDotIdx, vector<Radar>::iterator ra
 // 通过车辆当前的x，y，z坐标，以及径向速度，计算其实际速度（统一默认车辆沿着车道行驶，在误差可接受的范围内，若默认车道方向就是x轴正向方向，此时alpha=1）
 extern double v_true_cal(double x, double y, double z, double v_r, double alpha);
 // 该部分用于检测径向速度相近且位置接近的雷达数据
-extern void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector<int>& radarFrameTimeIdx, const vector<int>& Lane2FrameIdx, int DotIdx, int n_Frame, const vector<int>& idx, double& radar_x, double& radar_y);
+extern void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector<int>& radarFrameTimeIdx, const vector<int>& Lane2FrameIdx, int DotIdx, int n_Frame, const vector<int>& idx, double& radar_x, double& radar_y, const vector<vector<double>>& LaneRadarTrack, int LastOKIDX, double& sp_mean);
 // 利用最小二乘法，拟合数据LaneRadarTrack_x, LaneRadarTrack1_y为y = kx + b的形式
 extern void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& LaneRadarTrack_y, double& k, double& b);
 // 通过标定数据，确定雷达坐标系的原点的经纬度
@@ -75,6 +75,18 @@ extern void get_intercept(double k, double b1, double b3, double& b_left, double
 extern void getMaxVarX_MaxVarY(double maxCarX, double maxCarY, double theta2, double& maxVarX, double& maxVarY);
 // 检查指定点是否位于区域内
 extern bool check_in_zone(double k, double b_left, double b_right, double x, double y);
+// 执行矩阵乘法的函数
+extern vector<vector<double>> matrixMultiply(const vector<vector<double>>& A, const vector<vector<double>>& B);
+// 执行矩阵求逆的函数
+extern vector<vector<double>> matrixInverse(const vector<vector<double>>& A);
+// 执行矩阵转置的函数
+extern vector<vector<double>> transposeMatrix(const vector<vector<double>>& A);
+// 执行矩阵加法的函数
+extern vector<vector<double>> matrixAddition(const vector<vector<double>>& A, const vector<vector<double>>& B);
+// 执行矩阵减法的函数
+extern vector<vector<double>> matrixSubtraction(const vector<vector<double>>& A, const vector<vector<double>>& B);
+// 执行矩阵在对应行上赋值的函数
+extern void setRows(vector<vector<double>>& tracer_Pbuffer, const vector<vector<double>>& P_posterior, int start_row);
 
 // PI常数;
 extern const double PI;
