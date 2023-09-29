@@ -99,6 +99,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
         });
         bool OKFLAG = false;
         double radar_x, radar_y, predict_x = 0.0, predict_y = 0.0;
+        double sp_mean = 0.0;
 
         // 第一检验条件：如果能找到速度相近，且距离上一个OK的点的距离小于5m的两个点，则视作成功找到对应点
         for (int j = 0; j < n_Frame; ++j) {
@@ -115,14 +116,14 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
                         RadarData[tmpDotIdx].RCS > 0) {
 
                         OKFLAG = true;
-                        lastLastOKIdx = LastOKIDX;
-                        LastOKIDX = cnt;
                         DotIdx = tmpDotIdx;
                         radar_x = RadarData[DotIdx].DistLong;
                         radar_y = RadarData[DotIdx].DistLat;
 
                         // 该部分用于检测径向速度相近且位置接近的雷达数据
-                        find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y);
+                        find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
+                        lastLastOKIdx = LastOKIDX;
+                        LastOKIDX = cnt;
                         break;
                     }
                 }
@@ -134,12 +135,12 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             DotIdx = radarFrameTimeIdx[Lane2FrameIdx[i]] + idx[0];
             predict_lot(LastOKIDX, DotIdx, RadarData.begin(), LaneRadarTrack, lastLastOKIdx, predict_x, predict_y);
             // 该部分用于检测径向速度相近且位置接近的雷达数据
-            find_relate_data(i, 0, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y);
+            find_relate_data(i, 0, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
             LastOKIDX = cnt;
             OKFLAG = 1;
         }
         else if (!OKFLAG) { // 如果下一个点与上一个点的距离小于5m，则接受这个点
-            for (int limit = 25; limit < 51; limit += 25) {
+            for (int limit = 25; limit < 26; limit += 25) {
                 if (OKFLAG)
                     break;
                 else {
@@ -155,7 +156,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
                             radar_x = RadarData[DotIdx].DistLong;
                             radar_y = RadarData[DotIdx].DistLat;
                             // 该部分用于检测径向速度相近且位置接近的雷达数据
-                            find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y);
+                            find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
                             break;
                         }
                     }
@@ -183,7 +184,12 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             radar_x = RadarData[DotIdx].DistLong;
             radar_y = RadarData[DotIdx].DistLat;
             // 该部分用于检测径向速度相近且位置接近的雷达数据
-            find_relate_data(i, min_idx, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y);
+            find_relate_data(i, min_idx, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
+            OKFLAG = true;
+        }
+        if (!OKFLAG) {
+            LaneRadarTrack.pop_back();
+            --n_map; --mapIdx; continue;
         }
 
         LaneRadarTrack[cnt][0] = radar_x;   // 距离雷达的纵向距离
@@ -194,7 +200,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
         LaneRadarTrack[cnt][5] = (*(begin + i)).EastVelocity;   // 东向速度
         LaneRadarTrack[cnt][6] = RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]]].timestamp;  // 时间
         LaneRadarTrack[cnt][7] = (*(begin + i)).Hgt;    // 海拔
-        LaneRadarTrack[cnt][8] = RadarData[DotIdx].VeloRadial;  // 径向速度
+        LaneRadarTrack[cnt][8] = sp_mean;  // 径向速度
         ++cnt;
     }
     return LaneRadarTrack;
@@ -202,69 +208,94 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
 
 // 初始化程序
 void Solution::init() {
-    rtk::readRtk("./data/Lane1_rtk.dat", rtkLine1);
-    rtk::readRtk("./data/Lane2_rtk.dat", rtkLine2);
-    rtk::readRtk("./data/Lane3_rtk.dat", rtkLine3);
-    n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
-    vector<vector<double>> LaneRadarTrack1 = mapLane2Radar(rtkLine1.begin(), rtkLine1.end());
-    vector<vector<double>> LaneRadarTrack2 = mapLane2Radar(rtkLine2.begin(), rtkLine2.end());
-    vector<vector<double>> LaneRadarTrack3 = mapLane2Radar(rtkLine3.begin(), rtkLine3.end());
-    double k1 = 0.0, k2 = 0.0, k3 = 0.0, b1 = 0.0, b2 = 0.0, b3 = 0.0, arcTan = 0.0;
-    int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
-    vector<double> LaneRadarTrackX1(nLane1);
-    vector<double> LaneRadarTrackY1(nLane1);
-    vector<double> LaneRadarTrackAti1(nLane1);
-    vector<double> LaneRadarTrackX2(nLane2);
-    vector<double> LaneRadarTrackY2(nLane2);
-    vector<double> LaneRadarTrackAti2(nLane2);
-    vector<double> LaneRadarTrackX3(nLane3);
-    vector<double> LaneRadarTrackY3(nLane3);
-    vector<double> LaneRadarTrackAti3(nLane3);
-    for (int i = 0; i < nLane1; ++i) {
-        LaneRadarTrackX1[i] = LaneRadarTrack1[i][0];
-        LaneRadarTrackY1[i] = LaneRadarTrack1[i][1];
-        LaneRadarTrackAti1[i] = LaneRadarTrack1[i][7];
-        arcTan += atan(LaneRadarTrack1[i][4] / LaneRadarTrack1[i][5]);
-        latitudeMean += LaneRadarTrack1[i][2];
-    }
-    for (int i = 0; i < nLane2; ++i) {
-        LaneRadarTrackX2[i] = LaneRadarTrack2[i][0];
-        LaneRadarTrackY2[i] = LaneRadarTrack2[i][1];
-        LaneRadarTrackAti2[i] = LaneRadarTrack2[i][7];
-        arcTan += atan(LaneRadarTrack2[i][4] / LaneRadarTrack2[i][5]);
-        latitudeMean += LaneRadarTrack2[i][2];
-    }
-    for (int i = 0; i < nLane3; ++i) {
-        LaneRadarTrackX3[i] = LaneRadarTrack3[i][0];
-        LaneRadarTrackY3[i] = LaneRadarTrack3[i][1];
-        LaneRadarTrackAti3[i] = LaneRadarTrack3[i][7];
-        arcTan += atan(LaneRadarTrack3[i][4] / LaneRadarTrack3[i][5]);
-        latitudeMean += LaneRadarTrack3[i][2];
-    }
-    line_plofit(LaneRadarTrackX1, LaneRadarTrackY1, k1, b1);
-    line_plofit(LaneRadarTrackX2, LaneRadarTrackY2, k2, b2);
-    line_plofit(LaneRadarTrackX3, LaneRadarTrackY3, k3, b3);
-    k = (k1 + k2 + k3) / 3;  // 车道在雷达坐标系上的斜率
-    double theta1 = arcTan / (nLane1 + nLane2 + nLane3);    // 经纬度与雷达坐标系之间的角度偏差
-    theta2 = atan(k);    // 车道与雷达坐标系之间的角度偏差
-    theta0 = theta1 - theta2;
-    latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // 平均纬度
-    ori_longitude = 0.0, ori_latitude = 0.0;
-    cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
-    b_left = 0.0, b_right = 0.0;
-    get_intercept(k, b1, b3, b_left, b_right);
-    cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
+    //rtk::readRtk("./data/Lane1_rtk.dat", rtkLine1);
+    //rtk::readRtk("./data/Lane2_rtk.dat", rtkLine2);
+    //rtk::readRtk("./data/Lane3_rtk.dat", rtkLine3);
+    //n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
+    //vector<vector<double>> LaneRadarTrack1 = mapLane2Radar(rtkLine1.begin(), rtkLine1.end());
+    //vector<vector<double>> LaneRadarTrack2 = mapLane2Radar(rtkLine2.begin(), rtkLine2.end());
+    //vector<vector<double>> LaneRadarTrack3 = mapLane2Radar(rtkLine3.begin(), rtkLine3.end());
+    //double k1 = 0.0, k2 = 0.0, k3 = 0.0, b1 = 0.0, b2 = 0.0, b3 = 0.0, arcTan = 0.0;
+    //int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
+    //vector<double> LaneRadarTrackX1(nLane1);
+    //vector<double> LaneRadarTrackY1(nLane1);
+    //vector<double> LaneRadarTrackAti1(nLane1);
+    //vector<double> LaneRadarTrackX2(nLane2);
+    //vector<double> LaneRadarTrackY2(nLane2);
+    //vector<double> LaneRadarTrackAti2(nLane2);
+    //vector<double> LaneRadarTrackX3(nLane3);
+    //vector<double> LaneRadarTrackY3(nLane3);
+    //vector<double> LaneRadarTrackAti3(nLane3);
+    //for (int i = 0; i < nLane1; ++i) {
+    //    LaneRadarTrackX1[i] = LaneRadarTrack1[i][0];
+    //    LaneRadarTrackY1[i] = LaneRadarTrack1[i][1];
+    //    LaneRadarTrackAti1[i] = LaneRadarTrack1[i][7];
+    //    arcTan += atan(LaneRadarTrack1[i][4] / LaneRadarTrack1[i][5]);
+    //    latitudeMean += LaneRadarTrack1[i][2];
+    //}
+    //for (int i = 0; i < nLane2; ++i) {
+    //    LaneRadarTrackX2[i] = LaneRadarTrack2[i][0];
+    //    LaneRadarTrackY2[i] = LaneRadarTrack2[i][1];
+    //    LaneRadarTrackAti2[i] = LaneRadarTrack2[i][7];
+    //    arcTan += atan(LaneRadarTrack2[i][4] / LaneRadarTrack2[i][5]);
+    //    latitudeMean += LaneRadarTrack2[i][2];
+    //}
+    //for (int i = 0; i < nLane3; ++i) {
+    //    LaneRadarTrackX3[i] = LaneRadarTrack3[i][0];
+    //    LaneRadarTrackY3[i] = LaneRadarTrack3[i][1];
+    //    LaneRadarTrackAti3[i] = LaneRadarTrack3[i][7];
+    //    arcTan += atan(LaneRadarTrack3[i][4] / LaneRadarTrack3[i][5]);
+    //    latitudeMean += LaneRadarTrack3[i][2];
+    //}
+    //line_plofit(LaneRadarTrackX1, LaneRadarTrackY1, k1, b1);
+    //line_plofit(LaneRadarTrackX2, LaneRadarTrackY2, k2, b2);
+    //line_plofit(LaneRadarTrackX3, LaneRadarTrackY3, k3, b3);
+    //k = (k1 + k2 + k3) / 3;  // 车道在雷达坐标系上的斜率
+    //double theta1 = arcTan / (nLane1 + nLane2 + nLane3);    // 经纬度与雷达坐标系之间的角度偏差
+    //theta2 = atan(k);    // 车道与雷达坐标系之间的角度偏差
+    //theta0 = theta1 - theta2 + 0.003121;
+    //latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // 平均纬度
+    //ori_longitude = 0.0, ori_latitude = 0.0;
+    //cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
+    //b_left = 0.0, b_right = 0.0;
+    //get_intercept(k, b1, b3, b_left, b_right);
+    //cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
 
-    double kAti1 = 0.0, kAti2 = 0.0, kAti3 = 0.0, bAti1 = 0.0, bAti2 = 0.0, bAti3 = 0.0;
-    line_plofit(LaneRadarTrackX1, LaneRadarTrackAti1, kAti1, bAti1);
-    line_plofit(LaneRadarTrackX2, LaneRadarTrackAti2, kAti2, bAti2);
-    line_plofit(LaneRadarTrackX3, LaneRadarTrackAti3, kAti3, bAti3);
-    kAti = (kAti1 + kAti2 + kAti3) / 3;
-    bAti = (bAti1 + bAti2 + bAti3) / 3;
+    //double kAti1 = 0.0, kAti2 = 0.0, kAti3 = 0.0, bAti1 = 0.0, bAti2 = 0.0, bAti3 = 0.0;
+    //line_plofit(LaneRadarTrackX1, LaneRadarTrackAti1, kAti1, bAti1);
+    //line_plofit(LaneRadarTrackX2, LaneRadarTrackAti2, kAti2, bAti2);
+    //line_plofit(LaneRadarTrackX3, LaneRadarTrackAti3, kAti3, bAti3);
+    //kAti = (kAti1 + kAti2 + kAti3) / 3;
+    //bAti = (bAti1 + bAti2 + bAti3) / 3;
+
+    // 标定参数预先设置
+    n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
+    theta2 = -0.005046118396185;
+    cosTheta2 = 0.999987268371582;
+    sinTheta2 = -0.005046096981066;
+    theta0 = 0.506353618725382;
+    latitudeMean = 23.262841934043035;
+    ori_longitude = 113.525249431069454;
+    ori_latitude = 23.263545093071144;
+    b_left = 5.589836551857512;
+    b_right = -8.810346785925899;
+    k = -0.005046161226915;
+    kAti = 0.004225344416807;
+    bAti = 26.899624552922948;
 }
 
 // 主算法
 void Solution::run() {
+
+    // ***********************************卡尔曼滤波器初始化***********************************
+    double deltat = 1;
+    vector<vector<double>> A = { {1, deltat}, {0, 1} };   // 状态转移矩阵，上一时刻的状态转移到当前时刻
+    vector<vector<double>> Q = { {0.5, 0}, {0, 0.01} };   // 过程噪声协方差矩阵Q，p(w)~N(0, Q)，噪声来自真实世界中的不确定性
+    vector<vector<double>> R = { {4, 0}, {0, 0.04} };     // 观测噪声协方差矩阵R，p(v)~N(0, R)
+    vector<vector<double>> H = { {1, 0}, {0, 1} };        // 状态观测矩阵
+    vector<vector<double>> P = { {4, 0}, {0, 0.04} };     // 状态估计协方差矩阵P 
+    vector<vector<double>> P_posterior = { {4, 0}, {0, 0.04} };   // 状态后验估计协方差矩阵
+    vector<vector<double>> eyeMatrix = { {1.0, 0}, {0, 1.0} };  // 创建单位矩阵
 
     // ************************************初始化和参数设置************************************
     int n_radar_data = RadarData.size();
@@ -277,14 +308,14 @@ void Solution::run() {
     double maxVarX = 0.0, maxVarY = 0.0;
     getMaxVarX_MaxVarY(maxCarX, maxCarY, theta2, maxVarX, maxVarY);    // 设置同一辆车的在前后帧的在车道上的最大纵向距离偏差和最大横向距离偏差
 
-    double maxVarRCS = 15.0;    // 设置同一辆车的在前后帧的RCS偏差
+    double maxVarRCS = 1500.0;    // 设置同一辆车的在前后帧的RCS偏差
     double RadarHeight = 7.0;   // 雷达高度
-    double RCSMin = 0.0;        // 允许的最小RCS
+    double RCSMin = 5.0;        // 允许的最小RCS
     double RCSMinZero = 10.0;   // 当雷达数据点的径向速度为0时，允许的最小RCS
     double RCSMinSingle = 10.0; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
     double carSpeedVar = 0.1;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
     int interpolationLimCnt = 1;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
-    int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧4
+    int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧
     int maxFailTime = 5;        // 允许追踪失败的最大次数
     // ****************************************************************************************
 
@@ -297,6 +328,7 @@ void Solution::run() {
         ++cnt;
     }
 
+    vector<vector<double>> tracer_Pbuffer(500, vector<double>(2, 0));
     vector<vector<int>> tracer_buffer(500, vector<int>(4, 0)); // 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
     int tracer_pointer = -1;     // tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
     int data_idx = -1;
@@ -355,6 +387,8 @@ void Solution::run() {
             int carClass = all_res[dataID].Object_Class;
             double deltaT = nowT - all_res[dataID].Timestamp;
             float maxCarLen = maxCarsLen[dataID];
+            P_posterior[0] = tracer_Pbuffer[i * 2];
+            P_posterior[1] = tracer_Pbuffer[i * 2 + 1];
             bool coupleFlag = false;
             int j = 0;  // j指向curFrameData数据中的数据点
 
@@ -424,6 +458,30 @@ void Solution::run() {
                     X_mean = carDisLog;
                     Y_mean = carDisLat;
                 }
+
+                // ----------------------进行先验估计---------------------
+                A = { {1, deltaT}, {0, 1} };
+                vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
+                vector<vector<double>>X_prior = matrixMultiply(A, X_last);
+                // -----------------计算状态估计协方差矩阵P----------------
+                vector<vector<double>> A_transpose = transposeMatrix(A);
+                vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
+                vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
+                vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
+                // ----------------------计算卡尔曼增益-------------------
+                R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // 观测噪声协方差矩阵R，p(v)~N(0,R)
+                vector<vector<double>> H_transpose = transposeMatrix(H);
+                vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
+                vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
+                vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
+                // ------------------------后验估计-----------------------
+                vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
+                vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
+                X_mean = X_posterior[0][0];
+                sp_mean = X_posterior[1][0];
+                // --------------- 更新状态估计协方差矩阵P-----------------
+                P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
+
                 maxCarsLen[data_idx] = maxCarLen;
                 writeSingleResult(nowT, carID, X_mean, Y_mean, carDisLat, RadarHeight, sp_mean, RCS_mean, RadarDataID, all_res, data_idx, maxCarLen);
                 // 更新在缓冲区的数据
@@ -431,6 +489,7 @@ void Solution::run() {
                 tracer_buffer[i][1] = RadarDataID;
                 tracer_buffer[i][2] = 0;    // 连续追踪失败次数归零
                 ++tracer_buffer[i][3];
+                setRows(tracer_Pbuffer, P_posterior, i);
                 break;
             }
             if (!coupleFlag) {  // 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
@@ -441,6 +500,10 @@ void Solution::run() {
                     tracer_buffer[i][1] = tracer_buffer[tracer_pointer][1];
                     tracer_buffer[i][2] = tracer_buffer[tracer_pointer][2];
                     tracer_buffer[i][3] = tracer_buffer[tracer_pointer][3];
+                    vector<vector<double>> tmpMat(2, vector<double>(2, 0));
+                    tmpMat[0] = tracer_Pbuffer[tracer_pointer * 2];
+                    tmpMat[1] = tracer_Pbuffer[tracer_pointer * 2 + 1];
+                    setRows(tracer_Pbuffer, tmpMat, i);
                     --tracer_pointer;
                 }
                 else {
@@ -512,6 +575,7 @@ void Solution::run() {
                 tracer_buffer[tracer_pointer][1] = RadarDataID;
                 tracer_buffer[tracer_pointer][2] = 0;
                 tracer_buffer[tracer_pointer][3] = 1;
+                setRows(tracer_Pbuffer, P_posterior, tracer_pointer);
             }
             j = jStart + 1;
         }
@@ -611,9 +675,22 @@ double v_true_cal(double x, double y, double z, double v_r, double alpha) {
 }
 
 // 该部分用于检测径向速度相近且位置接近的雷达数据
-void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector<int>& radarFrameTimeIdx, const vector<int>& Lane2FrameIdx, int DotIdx, int n_Frame, const vector<int>& idx, double& radar_x, double& radar_y) {
+void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector<int>& radarFrameTimeIdx, const vector<int>& Lane2FrameIdx, int DotIdx, int n_Frame, const vector<int>& idx, double& radar_x, double& radar_y, const vector<vector<double>>& LaneRadarTrack, int LastOKIDX, double& sp_mean) {
+    
+    // ***********************************卡尔曼滤波器初始化***********************************
+    double deltat = 1;
+    static vector<vector<double>> A = { {1, deltat}, {0, 1} };   // 状态转移矩阵，上一时刻的状态转移到当前时刻
+    static vector<vector<double>> Q = { {0.5, 0}, {0, 0.01} };   // 过程噪声协方差矩阵Q，p(w)~N(0, Q)，噪声来自真实世界中的不确定性
+    static vector<vector<double>> R = { {4, 0}, {0, 0.04} };     // 观测噪声协方差矩阵R，p(v)~N(0, R)
+    static vector<vector<double>> H = { {1, 0}, {0, 1} };        // 状态观测矩阵
+    static vector<vector<double>> P = { {4, 0}, {0, 0.04} };     // 状态估计协方差矩阵P 
+    static vector<vector<double>> P_posterior = { {4, 0}, {0, 0.04} };   // 状态后验估计协方差矩阵
+    static vector<vector<double>> eyeMatrix = { {1.0, 0}, {0, 1.0} };  // 创建单位矩阵   
+    
     int tmp_cnt = 1, tmpDotIdx1 = 0;
     double sum_radar_x = radar_x, sum_radar_y = radar_y;
+    sp_mean = RadarData[DotIdx].VeloRadial;
+    double speedSum = sp_mean;
     ++j;
     double sp_last = RadarData[DotIdx].VeloRadial;
     if (j < n_Frame - 1)
@@ -624,6 +701,8 @@ void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector
     while (j < n_Frame - 1 && abs(sp_last - RadarData[tmpDotIdx1].VeloRadial) < 0.001) {
         if ((RadarData[tmpDotIdx1].DistLong - radar_x)*(RadarData[tmpDotIdx1].DistLong - radar_x) + 
             (RadarData[tmpDotIdx1].DistLat - radar_y) * (RadarData[tmpDotIdx1].DistLat - radar_y) < 25) {
+
+            speedSum += RadarData[tmpDotIdx1].VeloRadial;
             sum_radar_x = sum_radar_x + RadarData[tmpDotIdx1].DistLong;
             sum_radar_y = sum_radar_y + RadarData[tmpDotIdx1].DistLat;
             radar_x = sum_radar_x / tmp_cnt;
@@ -634,6 +713,35 @@ void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector
         }
         ++j;
         tmpDotIdx1 = radarFrameTimeIdx[Lane2FrameIdx[i]] + idx[j];
+    }
+
+    if (LastOKIDX > 0) {
+        sp_mean = speedSum / (tmp_cnt - 1);
+        // ----------------------进行先验估计---------------------
+        double deltaT = RadarData[DotIdx].timestamp - LaneRadarTrack[LastOKIDX][6];
+        A = { {1, deltaT}, {0, 1} };
+        double carDisLog = LaneRadarTrack[LastOKIDX][0];
+        double carSpeed = LaneRadarTrack[LastOKIDX][8];
+        vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
+        vector<vector<double>>X_prior = matrixMultiply(A, X_last);
+        // -----------------计算状态估计协方差矩阵P----------------
+        vector<vector<double>> A_transpose = transposeMatrix(A);
+        vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
+        vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
+        vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
+        // ----------------------计算卡尔曼增益-------------------
+        R = { {9.0, 0.0}, {0.0, 0.0} };    // 观测噪声协方差矩阵R，p(v)~N(0,R)
+        vector<vector<double>> H_transpose = transposeMatrix(H);
+        vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
+        vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
+        vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
+        // ------------------------后验估计-----------------------
+        vector<vector<double>> Z_measure = { {radar_x}, {sp_mean} };
+        vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
+        radar_x = X_posterior[0][0];
+        sp_mean = X_posterior[1][0];
+        // --------------- 更新状态估计协方差矩阵P-----------------
+        P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
     }
 }
 
@@ -732,4 +840,105 @@ bool check_in_zone(double k, double b_left, double b_right, double x, double y) 
         return true;
     else    // 在界外
         return false;
+}
+
+// 执行矩阵乘法的函数
+vector<vector<double>> matrixMultiply(const vector<vector<double>>& A, const vector<vector<double>>& B) {
+    vector<vector<double>> C(A.size(), vector<double>(B[0].size(), 0.0));
+    for (size_t i = 0; i < A.size(); ++i)
+        for (size_t j = 0; j < B[0].size(); ++j)
+            for (size_t k = 0; k < B.size(); ++k)
+                C[i][j] += A[i][k] * B[k][j];
+    return C;
+}
+
+// 执行矩阵求逆的函数
+vector<vector<double>> matrixInverse(const vector<vector<double>>& A) {
+
+    // 设置维度
+    size_t n = A.size();
+
+    // 用单位矩阵来增广该矩阵
+    vector<vector<double>> augmentedMatrix(n, vector<double>(2 * n, 0.0));
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            augmentedMatrix[i][j] = A[i][j];
+            augmentedMatrix[i][j + n] = (i == j) ? 1.0 : 0.0;
+        }
+    }
+
+    // 高斯消元法
+    for (size_t i = 0; i < n; ++i) {
+        // Make the diagonal contain 1
+        double diagonal = augmentedMatrix[i][i];
+        for (size_t j = 0; j < 2 * n; ++j) {
+            augmentedMatrix[i][j] /= diagonal;
+        }
+
+        // 让其余行在这一列变为0
+        for (size_t k = 0; k < n; ++k) {
+            if (k != i) {
+                double factor = augmentedMatrix[k][i];
+                for (size_t j = 0; j < 2 * n; ++j) {
+                    augmentedMatrix[k][j] -= factor * augmentedMatrix[i][j];
+                }
+            }
+        }
+    }
+
+    // 取出逆矩阵
+    vector<vector<double>> A_inverse(n, vector<double>(n, 0.0));
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 0; j < n; ++j)
+            A_inverse[i][j] = augmentedMatrix[i][j + n];
+    return A_inverse;
+
+}
+
+// 执行矩阵转置的函数
+vector<vector<double>> transposeMatrix(const vector<vector<double>>& A) {
+    size_t rows = A.size();
+    size_t cols = A[0].size();
+
+    vector<vector<double>> transpose(cols, vector<double>(rows, 0.0));
+
+    for (size_t i = 0; i < rows; ++i)
+        for (size_t j = 0; j < cols; ++j)
+            transpose[j][i] = A[i][j];
+
+    return transpose;
+}
+
+// 执行矩阵加法的函数
+vector<vector<double>> matrixAddition(const vector<vector<double>>& A, const vector<vector<double>>& B) {
+
+    size_t rows = A.size();
+    size_t cols = A[0].size();
+    vector<vector<double>> result(rows, vector<double>(cols, 0.0));
+    for (size_t i = 0; i < rows; ++i) 
+        for (size_t j = 0; j < cols; ++j)
+            result[i][j] = A[i][j] + B[i][j];
+    return result;
+}
+
+// 执行矩阵减法的函数
+vector<vector<double>> matrixSubtraction(const vector<vector<double>>& A, const vector<vector<double>>& B) {
+
+    size_t rows = A.size();
+    size_t cols = A[0].size();
+    vector<vector<double>> result(rows, vector<double>(cols, 0.0));
+    for (size_t i = 0; i < rows; ++i)
+        for (size_t j = 0; j < cols; ++j)
+            result[i][j] = A[i][j] - B[i][j];
+    return result;
+}
+
+// 执行矩阵在对应行上赋值的函数
+void setRows(vector<vector<double>>& tracer_Pbuffer, const vector<vector<double>>& P_posterior, int start_row) {
+    int rows_to_copy = P_posterior.size();
+    for (int i = 0; i < rows_to_copy; ++i) {
+        for (int j = 0; j < P_posterior[i].size(); ++j) {
+            tracer_Pbuffer[start_row * 2 + i][j] = P_posterior[i][j];
+        }
+    }
 }
