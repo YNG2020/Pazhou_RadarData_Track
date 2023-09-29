@@ -14,6 +14,7 @@ function [b_left, b_right] = get_intercept(k, b1, b3)
 
     b_right_tmp1 = b + lineGap2 * sqrt(1 + k^2);
     b_right_tmp2 = b - lineGap2 * sqrt(1 + k^2);
+    % b_right = b - lineGap2 * sqrt(1 + k^2);
     if abs(b_right_tmp1 - b1) > abs(b_right_tmp2 - b1)
         b_right = b_right_tmp1;
     else

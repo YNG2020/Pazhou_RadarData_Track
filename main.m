@@ -47,7 +47,7 @@ maxCarY = 2;    % 预设车辆宽度为maxCarYm
 
 maxVarRCS = 1500; % 设置同一辆车的在前后帧的RCS偏差
 RadarHeight = 7;    % 雷达高度
-RCSMin = 0;   % 允许的最小RCS
+RCSMin = 5;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
 RCSMinSingle = 10;  % 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
 carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
@@ -106,7 +106,7 @@ for cnt = 1 : n_Gap
         carClass = all_res(dataID, 8);
         deltaT = nowT - all_res(dataID, 1);
         maxCarLen = all_res(dataID, 16);
-        P_posterior = tracer_Pbuffer(1 : 2, i * 2 - 1 : i * 2);
+        P_posterior = tracer_Pbuffer(i * 2 - 1 : i * 2, 1 : 2);
         coupleFlag = 0; j = 1;  % j指向curFrameData数据中的数据点
 
         while j <= OKIndexPointer_len  % 在OKIndex里寻找能与正在追踪的车辆匹配的点，找到之后，把它从OKIndex中删除
@@ -205,7 +205,7 @@ for cnt = 1 : n_Gap
             tracer_buffer(i, 2) = RadarDataID;
             tracer_buffer(i, 3) = 0;    % 连续追踪失败次数归零
             tracer_buffer(i, 4) = tracer_buffer(i, 4) + 1;
-            tracer_Pbuffer(1 : 2, i * 2 - 1 : i * 2) = P_posterior;
+            tracer_Pbuffer(i * 2 - 1 : i * 2, 1 : 2) = P_posterior;
             break;
         end
         if coupleFlag == 0      % 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
@@ -217,7 +217,7 @@ for cnt = 1 : n_Gap
                 tracer_buffer(i, 2) = tracer_buffer(tracer_pointer, 2);
                 tracer_buffer(i, 3) = tracer_buffer(tracer_pointer, 3);
                 tracer_buffer(i, 4) = tracer_buffer(tracer_pointer, 4);
-                tracer_Pbuffer(1 : 2, i * 2 - 1 : i * 2) = tracer_Pbuffer(1 : 2, tracer_pointer * 2 - 1 : tracer_pointer * 2);
+                tracer_Pbuffer(i * 2 - 1 : i * 2, 1 : 2) = tracer_Pbuffer(tracer_pointer * 2 - 1 : tracer_pointer * 2, 1 : 2);
                 tracer_pointer = tracer_pointer - 1;
             else
                 tracer_buffer(i, 3) = tracer_buffer(i, 3) + 1;  % 连续追踪失败次数+1
@@ -287,7 +287,7 @@ for cnt = 1 : n_Gap
             tracer_buffer(tracer_pointer, 2) = RadarDataID; 
             tracer_buffer(tracer_pointer, 3) = 0;
             tracer_buffer(tracer_pointer, 4) = 1;
-            tracer_Pbuffer(1 : 2, tracer_pointer * 2 - 1 : tracer_pointer * 2) = P_posterior;
+            tracer_Pbuffer(tracer_pointer * 2 - 1 : tracer_pointer * 2, 1 : 2) = P_posterior;
         end
         j = jStart + 1;
     end
@@ -297,4 +297,4 @@ removeFlag = removeFlag(1 : data_idx);
 final_data = final_data(removeFlag == 0, :);
 final_data2 = all_res(1 : data_idx, :);
 final_data2 = all_res(removeFlag == 0, :);
-writematrix(final_data, 'result.csv')
+% writematrix(final_data, 'result.csv')
