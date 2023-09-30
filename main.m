@@ -49,8 +49,8 @@ maxVarRCS = 1500; % 设置同一辆车的在前后帧的RCS偏差
 RadarHeight = 7;    % 雷达高度
 RCSMin = 5;   % 允许的最小RCS
 RCSMinZero = 10;    % 当雷达数据点的径向速度为0时，允许的最小RCS
-RCSMinSingle = 10;  % 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
-carSpeedVar = 0.1;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
+RCSMinSingle = 5;  % 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
+carSpeedVar = 0.4;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
 interpolationLimCnt = 1;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
 interpolationLimM = 400;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
 maxFailTime = 5;       % 允许追踪失败的最大次数
@@ -235,6 +235,9 @@ for cnt = 1 : n_Gap
             j = j + 1; continue;
         end
         if curFrameData(j, 5) == 0
+            BlockIndex(j) = 1; j = j + 1;  continue;
+        end
+        if curFrameData(j, 6) < RCSMinSingle
             BlockIndex(j) = 1; j = j + 1;  continue;
         end
 
