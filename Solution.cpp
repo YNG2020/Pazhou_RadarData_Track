@@ -312,8 +312,8 @@ void Solution::run() {
     double RadarHeight = 7.0;   // 雷达高度
     double RCSMin = 5.0;        // 允许的最小RCS
     double RCSMinZero = 10.0;   // 当雷达数据点的径向速度为0时，允许的最小RCS
-    double RCSMinSingle = 10.0; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
-    double carSpeedVar = 0.1;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
+    double RCSMinSingle = 5; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
+    double carSpeedVar = 0.4;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
     int interpolationLimCnt = 1;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
     int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧
     int maxFailTime = 5;        // 允许追踪失败的最大次数
@@ -522,6 +522,9 @@ void Solution::run() {
                 ++j; continue;
             }
             if (curFrameData[sortedIdx[j]].VeloRadial == 0) {
+                BlockIndex[j] = 1; ++j;  continue;
+            }
+            if (curFrameData[sortedIdx[j]].RCS < RCSMinSingle) {
                 BlockIndex[j] = 1; ++j;  continue;
             }
 
