@@ -273,10 +273,10 @@ void Solution::init() {
     theta2 = -0.005046118396185;
     cosTheta2 = 0.999987268371582;
     sinTheta2 = -0.005046096981066;
-    theta0 = 0.506353618725382;
+    theta0 = 0.505648618725381;
     latitudeMean = 23.262841934043035;
-    ori_longitude = 113.525249431069454;
-    ori_latitude = 23.263545093071144;
+    ori_longitude = 113.525249970317049;
+    ori_latitude = 23.263544188509108;
     b_left = 5.589836551857512;
     b_right = -8.810346785925899;
     k = -0.005046161226915;
@@ -312,11 +312,11 @@ void Solution::run() {
     double RadarHeight = 7.0;   // 雷达高度
     double RCSMin = 5.0;        // 允许的最小RCS
     double RCSMinZero = 10.0;   // 当雷达数据点的径向速度为0时，允许的最小RCS
-    double RCSMinSingle = 5; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
+    double RCSMinSingle = 5.0; // 当只有一个有效的雷达数据点被探测到时，允许的最小RCS
     double carSpeedVar = 0.4;   // 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
     int interpolationLimCnt = 1;// 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
     int interpolationLimM = 400;// 补帧限制，米，表示超过interpolationLimM后，不再补帧
-    int maxFailTime = 5;        // 允许追踪失败的最大次数
+    int maxFailTime = 20;        // 允许追踪失败的最大次数
     // ****************************************************************************************
 
     double lastTime = 0;
@@ -328,13 +328,13 @@ void Solution::run() {
         ++cnt;
     }
 
+    vector<int> carID_buffer(10000, 1); // 记录各carID出现的次数
     vector<vector<double>> tracer_Pbuffer(500, vector<double>(2, 0));
     vector<vector<int>> tracer_buffer(500, vector<int>(4, 0)); // 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
     int tracer_pointer = -1;     // tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
     int data_idx = -1;
     vector<res> all_res(n_radar_data / 10);         // 记录全体结果
     vector<float> maxCarsLen(n_radar_data / 10);    // 记录最大车长信息
-    vector<bool> removeFlag(n_radar_data / 10, false);   // 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
     int carUniqueId = -1;
     for (int cnt = 0; cnt < n_Gap; ++cnt) {
         int frameStart = frameGapIdx[cnt];  // 当前帧的在雷达数据的起始位
@@ -477,12 +477,21 @@ void Solution::run() {
                 // ------------------------后验估计-----------------------
                 vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
                 vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
-                X_mean = X_posterior[0][0];
-                sp_mean = X_posterior[1][0];
+
+                if (X_posterior[0][0] < 400) {
+                    X_mean = X_posterior[0][0];
+                    sp_mean = X_posterior[1][0];
+                }
+                else {      // 如果滤波值>400，则不采用滤波值，并强行结束追踪
+                    coupleFlag = 0;
+                    tracer_buffer[i][2] = maxFailTime + 1;
+                }
+
                 // --------------- 更新状态估计协方差矩阵P-----------------
                 P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
 
                 maxCarsLen[data_idx] = maxCarLen;
+                ++carID_buffer[carID];
                 writeSingleResult(nowT, carID, X_mean, Y_mean, carDisLat, RadarHeight, sp_mean, RCS_mean, RadarDataID, all_res, data_idx, maxCarLen);
                 // 更新在缓冲区的数据
                 tracer_buffer[i][0] = data_idx;
@@ -494,8 +503,6 @@ void Solution::run() {
             }
             if (!coupleFlag) {  // 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
                 if (tracer_buffer[i][2] > maxFailTime) {
-                    if (tracer_buffer[i][3] == 1)   // 初始追踪一次就失败的，将从最终输出队列中删除
-                        removeFlag[dataID] = true;
                     tracer_buffer[i][0] = tracer_buffer[tracer_pointer][0];
                     tracer_buffer[i][1] = tracer_buffer[tracer_pointer][1];
                     tracer_buffer[i][2] = tracer_buffer[tracer_pointer][2];
@@ -572,6 +579,7 @@ void Solution::run() {
                 float maxCarLen = (Xmax - Xmin) / cosTheta2;
                 maxCarsLen[data_idx] = maxCarLen;
                 int RadarDataID = frameStart + OKIndex[sortedIdx[jStart]];
+                carID_buffer[carUniqueId] = 1;
                 writeSingleResult(nowT, carUniqueId, X_mean, Y_mean, Y_mean, RadarHeight, sp_mean, RCS_mean, RadarDataID, all_res, data_idx, maxCarLen);
                 ++tracer_pointer;
                 tracer_buffer[tracer_pointer][0] = data_idx;
@@ -583,7 +591,7 @@ void Solution::run() {
             j = jStart + 1;
         }
     }
-     res::writeResult("result.csv", all_res, removeFlag);
+     res::writeResult("result.csv", all_res, carID_buffer);
 }
 
 // 写下单条结果

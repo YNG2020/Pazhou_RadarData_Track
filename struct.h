@@ -76,6 +76,6 @@ struct res{
     int Object_retrograde;
     int Object_overspeed;
 
-    static void writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<bool>& removeFlag);
+    static void writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<int>& carID_buffer);
     res() { Timestamp = 0.0; };
 };
