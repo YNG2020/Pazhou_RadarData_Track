@@ -22,7 +22,8 @@ arcTan2 = atan(tan2);
 arcTan3 = atan(tan3);
 theta1 = mean([arcTan1; arcTan2; arcTan3]); % 经纬度与雷达坐标系之间的角度偏差
 theta2 = atan(k);   % 车道与雷达坐标系之间的角度偏差
-theta0 = theta1 - theta2 + 0.003121;   % 经纬度与车道之间的角度偏差
+delta = 0 + 2416 / 1000000;
+theta0 = theta1 - theta2 + delta;   % 经纬度与车道之间的角度偏差
 latitudeMean = mean([LaneRadarTrack1(:, 4); LaneRadarTrack2(:, 4); LaneRadarTrack3(:, 4)]); % 平均纬度
 [ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
 [b_left, b_right] = get_intercept(k, b1, b3);
@@ -53,7 +54,7 @@ RCSMinSingle = 5;  % 当只有一个有效的雷达数据点被探测到时，�
 carSpeedVar = 0.4;  % 设置针对同一辆车的，同一帧内的，雷达的径向速度的最大偏差
 interpolationLimCnt = 1;  % 补帧限制，此处，表示连续补帧超过interpolationLimCnt后，不再补帧
 interpolationLimM = 400;   % 补帧限制，米，表示超过interpolationLimM后，不再补帧
-maxFailTime = 5;       % 允许追踪失败的最大次数
+maxFailTime = 20;       % 允许追踪失败的最大次数
 
 cnt = 1;
 lastTime = 0;
@@ -67,12 +68,12 @@ for i = 1 : n_radar_data
 end
 cnt2 = 0;
 
-tracer_Pbuffer = zeros(1000, 2);
+carID_buffer = zeros(10000, 1); % 记录各carID出现的次数
+tracer_Pbuffer = zeros(1000, 2);    
 tracer_buffer = zeros(1000, 4); % 第1列记录在前一帧追踪的存放在all_res中的编号，第2列记录对应的在RadarData中的编号，第3列记录连续追踪失败的次数，第4列记录当前连续追踪点数
 tracer_pointer = 0; % tracer_pointer永远指向buffer中的最后一个有效元素，且其前面均为有效元素
 data_idx = 0;
 all_res = zeros(n_radar_data, 16);
-removeFlag = zeros(n_radar_data, 1);    % 记录只有一次追踪记录的雷达点，对此类雷达点，将从输出队列中去除
 carUniqueId = -1;
 for cnt = 1 : n_Gap
     frameStart = frameGapIdx(cnt);  % 当前帧的在雷达数据的起始位
@@ -191,11 +192,18 @@ for cnt = 1 : n_Gap
             Z_measure(1) = X_mean;
             Z_measure(2) = sp_mean;
             X_posterior = X_prior + K * (Z_measure - H * X_prior);
-            X_mean = X_posterior(1);
-            sp_mean = X_posterior(2);
+
+            if X_posterior(1) < 400 
+                X_mean = X_posterior(1);
+                sp_mean = X_posterior(2);
+            else                    % 如果滤波值>400，则不采用滤波值，并强行结束追踪
+                coupleFlag = 0;
+                tracer_buffer(i, 3) = maxFailTime + 1;
+            end
+
             % 更新状态估计协方差矩阵P
             P_posterior = (eye(2, 2) - K * H) * P_prior;
-
+            carID_buffer(carID + 1) = carID_buffer(carID + 1) + 1;
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen,...
@@ -210,9 +218,6 @@ for cnt = 1 : n_Gap
         end
         if coupleFlag == 0      % 匹配失败，先试着留在跟踪队列里，如果持续失败，该跟踪数据从缓冲区中被移除
             if tracer_buffer(i, 3) > maxFailTime
-                if tracer_buffer(i, 4) == 1 % 初始追踪一次就失败的，将从最终输出队列中删除
-                    removeFlag(dataID) = 1;
-                end
                 tracer_buffer(i, 1) = tracer_buffer(tracer_pointer, 1);
                 tracer_buffer(i, 2) = tracer_buffer(tracer_pointer, 2);
                 tracer_buffer(i, 3) = tracer_buffer(tracer_pointer, 3);
@@ -281,6 +286,7 @@ for cnt = 1 : n_Gap
             carUniqueId = carUniqueId + 1;
             maxCarLen = (Xmax - Xmin) / cosTheta2;
             RadarDataID = frameStart + OKIndex(jStart);
+            carID_buffer(carUniqueId + 1) = 1;
             all_res(data_idx, :) = writeResult(nowT, carUniqueId, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, Y_mean, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen, ...
@@ -295,9 +301,16 @@ for cnt = 1 : n_Gap
         j = jStart + 1;
     end
 end
+
+removeFlag = zeros(1, data_idx);
+for i = 1 : data_idx
+    if carID_buffer(all_res(i, 2) + 1) <= 1
+        removeFlag(i) = 1;
+    end
+end
+
 final_data = all_res(1 : data_idx, 1:14);
-removeFlag = removeFlag(1 : data_idx);
 final_data = final_data(removeFlag == 0, :);
 final_data2 = all_res(1 : data_idx, :);
-final_data2 = all_res(removeFlag == 0, :);
+final_data2 = final_data2(removeFlag == 0, :);
 % writematrix(final_data, 'result.csv')
