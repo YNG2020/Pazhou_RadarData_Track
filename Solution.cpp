@@ -619,7 +619,7 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
     all_res[data_idx].Object_Latitude = latitude;
     all_res[data_idx].Object_Longitude = longitude;
     all_res[data_idx].Object_Altitude = kAti * X_mean + bAti;
-    if (abs(sp_true) < 2)
+    if (abs(sp_true) == 0)
         all_res[data_idx].Object_parking = 1;
     else
         all_res[data_idx].Object_parking = 0;
