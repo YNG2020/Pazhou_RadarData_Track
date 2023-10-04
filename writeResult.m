@@ -23,7 +23,7 @@ function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     res(9) = longitude;
     res(10) = latitude;
     res(11) = kAti * X_mean + bAti;
-    if abs(sp_true) < 2
+    if abs(sp_true) == 0
         res(12) = 1;
     else
         res(12) = 0;
