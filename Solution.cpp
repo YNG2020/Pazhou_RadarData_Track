@@ -270,16 +270,16 @@ void Solution::init() {
 
     // 标定参数预先设置
     n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
-    theta2 = -0.005046118396185;
-    cosTheta2 = 0.999987268371582;
-    sinTheta2 = -0.005046096981066;
-    theta0 = 0.505648618725381;
-    latitudeMean = 23.262841934043035;
-    ori_longitude = 113.525249970317049;
-    ori_latitude = 23.263544188509108;
-    b_left = 5.589836551857512;
-    b_right = -8.810346785925899;
-    k = -0.005046161226915;
+    theta2 = 0;
+    cosTheta2 = 1;
+    sinTheta2 = 0;
+    theta0 = 0.504648618725381;
+    latitudeMean = 23.264113717225055;
+    ori_longitude = 113.5252998913331;
+    ori_latitude = 23.263563972364057;
+    b_left = 7.589836551857512;
+    b_right = -6.810346785925899;
+    k = 0;
     kAti = 0.004225344416807;
     bAti = 26.899624552922948;
 }
@@ -372,6 +372,8 @@ void Solution::run() {
             }
             return i < j;
             });
+        if (OKIndexPointer_len == 0)
+            continue;
         double nowT = curFrameData[0].timestamp;    // 记录现在的时刻
 
         // 跟踪算法
@@ -459,36 +461,36 @@ void Solution::run() {
                     Y_mean = carDisLat;
                 }
 
-                // ----------------------进行先验估计---------------------
-                A = { {1, deltaT}, {0, 1} };
-                vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
-                vector<vector<double>>X_prior = matrixMultiply(A, X_last);
-                // -----------------计算状态估计协方差矩阵P----------------
-                vector<vector<double>> A_transpose = transposeMatrix(A);
-                vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
-                vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
-                vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
-                // ----------------------计算卡尔曼增益-------------------
-                R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // 观测噪声协方差矩阵R，p(v)~N(0,R)
-                vector<vector<double>> H_transpose = transposeMatrix(H);
-                vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
-                vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
-                vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
-                // ------------------------后验估计-----------------------
-                vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
-                vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
+                //// ----------------------进行先验估计---------------------
+                //A = { {1, deltaT}, {0, 1} };
+                //vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
+                //vector<vector<double>>X_prior = matrixMultiply(A, X_last);
+                //// -----------------计算状态估计协方差矩阵P----------------
+                //vector<vector<double>> A_transpose = transposeMatrix(A);
+                //vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
+                //vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
+                //vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
+                //// ----------------------计算卡尔曼增益-------------------
+                //R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // 观测噪声协方差矩阵R，p(v)~N(0,R)
+                //vector<vector<double>> H_transpose = transposeMatrix(H);
+                //vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
+                //vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
+                //vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
+                //// ------------------------后验估计-----------------------
+                //vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
+                //vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
 
-                if (X_posterior[0][0] < 400) {
-                    X_mean = X_posterior[0][0];
-                    sp_mean = X_posterior[1][0];
-                }
-                else {      // 如果滤波值>400，则不采用滤波值，并强行结束追踪
-                    coupleFlag = 0;
-                    tracer_buffer[i][2] = maxFailTime + 1;
-                }
+                //if (X_posterior[0][0] < 400) {
+                //    X_mean = X_posterior[0][0];
+                //    sp_mean = X_posterior[1][0];
+                //}
+                //else {      // 如果滤波值>400，则不采用滤波值，并强行结束追踪
+                //    coupleFlag = 0;
+                //    tracer_buffer[i][2] = maxFailTime + 1;
+                //}
 
-                // --------------- 更新状态估计协方差矩阵P-----------------
-                P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
+                //// --------------- 更新状态估计协方差矩阵P-----------------
+                //P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
 
                 maxCarsLen[data_idx] = maxCarLen;
                 ++carID_buffer[carID];
@@ -623,7 +625,7 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
         all_res[data_idx].Object_parking = 1;
     else
         all_res[data_idx].Object_parking = 0;
-    if (sp_true < 0)
+    if (sp_true > 0)
         all_res[data_idx].Object_retrograde = 1;
     else
         all_res[data_idx].Object_retrograde = 0;
@@ -641,8 +643,8 @@ void Solution::getCoordinate(double distLong, double distLati, double& longitude
     double latitude_gap_per_meter = 360 / (2 * PI * R); // 南北方向的一米在纬度上跨域的度数
     double westDeg = longitude_gap_per_meter * (distLong * cos(theta0) - distLati * sin(theta0));
     double southDeg = latitude_gap_per_meter * (distLong * sin(theta0) + distLati * cos(theta0));
-    longitude = ori_longitude - westDeg;
-    latitude = ori_latitude - southDeg;
+    longitude = ori_longitude + westDeg;
+    latitude = ori_latitude + southDeg;
 }
 
 // GPST时间转换为UNIX时间
