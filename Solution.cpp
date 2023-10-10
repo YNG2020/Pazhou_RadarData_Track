@@ -8,15 +8,15 @@
 Solution solution = Solution();
 const double PI = 3.141592653589793;
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ê¶¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½Ó³ï¿½ï¿½
+// ´´½¨±ê¶¨Êý¾ÝÓëÀ×´ïÊý¾ÝÖ®¼äµÄÓ³Éä
 vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vector<rtk>::iterator end) {
-    vector<double> radarFrameTime(n_Gap, 0);    // ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Í¬Ö¡ï¿½ï¿½Ê±ï¿½ï¿½
-    vector<int> radarFrameTimeIdx(n_Gap, 0); // ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Í¬Ö¡ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ó¦ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½Â±ï¿½
-    vector<int> radarFrameCnt(n_Gap, 0);     // ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Í¬Ö¡ï¿½Ðµï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½
+    vector<double> radarFrameTime(n_Gap, 0);    // À×´ïÊý¾ÝÖÐ²»Í¬Ö¡µÄÊ±¼ä
+    vector<int> radarFrameTimeIdx(n_Gap, 0); // À×´ïÊý¾ÝÖÐ²»Í¬Ö¡µÄÊ±¼ä¶ÔÓ¦µÄµÚÒ»¸öÏÂ±ê
+    vector<int> radarFrameCnt(n_Gap, 0);     // À×´ïÊý¾ÝÖÐ²»Í¬Ö¡ÖÐµãÔÆµÄÊýÁ¿
     radarFrameTime[0] = RadarData[0].timestamp;
     radarFrameTimeIdx[0] = 0;
 
-    int n_RadarData = RadarData.size();  // ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    int n_RadarData = RadarData.size();  // À×´ïÊý¾Ý×ÜÊý
     for (int i = 1, cnt = 1; i < n_RadarData; ++i) {
         if (RadarData[i].timestamp == radarFrameTime[cnt-1])
             continue;
@@ -30,38 +30,38 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
     radarFrameCnt[n_Gap - 1] = n_RadarData - radarFrameTimeIdx[n_Gap - 1];
 
     int n_Lane = end - begin;
-    vector<int> Lane2RadarFrame(n_Lane, 0);     // ï¿½ê¶¨ï¿½ï¿½ï¿½Ýµï¿½Ê±ï¿½Ìµï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ö¡ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½Â±ï¿½ï¿½Ó³ï¿½ï¿½
-    vector<int> Lane2FrameIdx(n_Lane, 0);     // ï¿½ê¶¨ï¿½ï¿½ï¿½Ýµï¿½Ê±ï¿½Ìµï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ö¡ï¿½ï¿½ï¿½Â±ï¿½ï¿½Ó³ï¿½ï¿½
-    vector<double> Lane2FrameErr(n_Lane, 0);     // ï¿½ê¶¨ï¿½ï¿½ï¿½Ýµï¿½Ê±ï¿½Ìµï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ö¡ï¿½ï¿½ï¿½Â±ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    int weeks = (*begin).Week; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³Ò»ï¿½ï¿½GPSTï¿½ï¿½ï¿½ï¿½
+    vector<int> Lane2RadarFrame(n_Lane, 0);     // ±ê¶¨Êý¾ÝµÄÊ±¿Ìµ½À×´ïÊý¾ÝµÄÖ¡µÄµÚÒ»¸öÏÂ±êµÄÓ³Éä
+    vector<int> Lane2FrameIdx(n_Lane, 0);     // ±ê¶¨Êý¾ÝµÄÊ±¿Ìµ½À×´ïÊý¾ÝµÄÖ¡µÄÏÂ±êµÄÓ³Éä
+    vector<double> Lane2FrameErr(n_Lane, 0);     // ±ê¶¨Êý¾ÝµÄÊ±¿Ìµ½À×´ïÊý¾ÝµÄÖ¡µÄÏÂ±êµÄÓ³ÉäµÄÎó²î
+    int weeks = (*begin).Week; // Êý¾ÝÖÐÍ³Ò»µÄGPSTÖÜÊý
     int startGapIdx = 0;
-    int n_map = 1;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    int n_map = 1;  // ×îÖÕÉú³ÉÓ³ÉäµÄÊýÁ¿
 
     for (int i = 0; i < n_Lane; ++i) {
         double second_in_weeks = (*(begin + i)).Seconds;
         double UNIX_time = GPST2UNIX(weeks, second_in_weeks);
         while (startGapIdx < n_Gap - 1) {
-            if (UNIX_time >= radarFrameTime[startGapIdx] && UNIX_time <= radarFrameTime[startGapIdx+1]) { // ï¿½ï¿½ï¿½ï¿½ï¿½ä£¬ï¿½Ô¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                if (std::abs(radarFrameTime[startGapIdx] - UNIX_time) < std::abs(radarFrameTime[startGapIdx+1] - UNIX_time)) {
+            if (UNIX_time >= radarFrameTime[startGapIdx] && UNIX_time <= radarFrameTime[startGapIdx+1]) { // ±ÕÇø¼ä£¬ÒÔ¸²¸ÇÕû¸öÇøÓò
+                if (abs(radarFrameTime[startGapIdx] - UNIX_time) < abs(radarFrameTime[startGapIdx+1] - UNIX_time)) {
                     Lane2RadarFrame[i] = radarFrameTimeIdx[startGapIdx];
                     Lane2FrameIdx[i] = startGapIdx;
-                    Lane2FrameErr[i] = std::abs(radarFrameTime[startGapIdx] - UNIX_time);
+                    Lane2FrameErr[i] = abs(radarFrameTime[startGapIdx] - UNIX_time);
                 }
                 else {
                     Lane2RadarFrame[i] = radarFrameTimeIdx[startGapIdx+1];
                     Lane2FrameIdx[i] = startGapIdx + 1;
-                    Lane2FrameErr[i] = std::abs(radarFrameTime[startGapIdx+1] - UNIX_time);
+                    Lane2FrameErr[i] = abs(radarFrameTime[startGapIdx+1] - UNIX_time);
                 }
                 if (i > 0 && (Lane2FrameIdx[i] != Lane2FrameIdx[i-1]))
                     ++n_map;
                 break;
             }
-            // ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ü¶ï¿½Ó¦ï¿½Ï±ê¶¨ï¿½ï¿½ï¿½Ýµï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // µ±Ç°±ÕÇø¼äÃ»ÄÜ¶ÔÓ¦ÉÏ±ê¶¨Êý¾ÝµÄÊ±¼ä´Á£¬Ôò×ªÏòÏÂÒ»±ÕÇø¼ä
             startGapIdx = startGapIdx + 1;
         }
     }
-    vector<int> LaneIdx2Map(n_map, 0);  // ï¿½æ´¢ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½Laneï¿½ï¿½ï¿½Ýµï¿½ï¿½Â±ï¿½
-    for (int i = 0, cnt = 0; i < n_Lane;) { // ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ê¶¨ï¿½ï¿½ï¿½Ýµï¿½Ê±ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã´È¡Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
+    vector<int> LaneIdx2Map(n_map, 0);  // ´æ´¢½«Òª½øÐÐÓ³ÉäµÄLaneÊý¾ÝµÄÏÂ±ê
+    for (int i = 0, cnt = 0; i < n_Lane;) { // Èç¹ûÓÐ¶à¸ö±ê¶¨Êý¾ÝµÄÊ±¼ä¶ÔÓ¦ÓÚÍ¬Ò»¸öÀ×´ïÊý¾ÝµÄÊ±¼ä´Á£¬ÄÇÃ´È¡Ê±¼ä²î×îÐ¡µÄ
         int lastFrameIdx = Lane2FrameIdx[i];
         float min_error = 10000.0;
         int min_err_idx = i;
@@ -88,7 +88,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
         int n_Frame = radarFrameCnt[Lane2FrameIdx[i]], DotIdx = 0;
         vector<double> sp_gap(n_Frame, 0);
         for (int j = 0; j < n_Frame; ++j) {
-            sp_gap[j] = std::abs(Lane_sp[i] - RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]] + j].VeloRadial);
+            sp_gap[j] = abs(Lane_sp[i] - RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]] + j].VeloRadial);
         }
         vector<int> idx(n_Frame);   std::iota(idx.begin(), idx.end(), 0);
         std::sort(idx.begin(), idx.end(), [&sp_gap](int a, int b) {
@@ -101,12 +101,12 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
         double radar_x, radar_y, predict_x = 0.0, predict_y = 0.0;
         double sp_mean = 0.0;
 
-        // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¾ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½OKï¿½Äµï¿½Ä¾ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½5mï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½Òµï¿½ï¿½ï¿½Ó¦ï¿½ï¿½
+        // µÚÒ»¼ìÑéÌõ¼þ£ºÈç¹ûÄÜÕÒµ½ËÙ¶ÈÏà½ü£¬ÇÒ¾àÀëÉÏÒ»¸öOKµÄµãµÄ¾àÀëÐ¡ÓÚ5mµÄÁ½¸öµã£¬ÔòÊÓ×÷³É¹¦ÕÒµ½¶ÔÓ¦µã
         for (int j = 0; j < n_Frame; ++j) {
-            if (sp_gap[idx[j]] > 1) // ï¿½Ù¶È²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½
+            if (sp_gap[idx[j]] > 1) // ËÙ¶È²î¾à¹ý´ó£¬ÌáÇ°½áÊøÕâÒ»¼ìÑé
                 break;
             if (j < n_Frame - 1) {
-                if (std::abs(sp_gap[idx[j]] - sp_gap[idx[j + 1]]) < 0.01) {
+                if (abs(sp_gap[idx[j]] - sp_gap[idx[j + 1]]) < 0.01) {
                     int tmpDotIdx = radarFrameTimeIdx[Lane2FrameIdx[i]] + idx[j];
 
                     predict_lot(LastOKIDX, tmpDotIdx, RadarData.begin(), LaneRadarTrack, lastLastOKIdx, predict_x, predict_y);
@@ -120,7 +120,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
                         radar_x = RadarData[DotIdx].DistLong;
                         radar_y = RadarData[DotIdx].DistLat;
 
-                        // ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½â¾¶ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã½Ó½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½
+                        // ¸Ã²¿·ÖÓÃÓÚ¼ì²â¾¶ÏòËÙ¶ÈÏà½üÇÒÎ»ÖÃ½Ó½üµÄÀ×´ïÊý¾Ý
                         find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
                         lastLastOKIdx = LastOKIDX;
                         LastOKIDX = cnt;
@@ -130,16 +130,16 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             }
         }
 
-        // ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¾ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½OKï¿½Äµï¿½Ä¾ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½5mï¿½ï¿½7mï¿½Äµã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½Òµï¿½ï¿½ï¿½Ó¦ï¿½ï¿½
+        // µÚ¶þ¼ìÑéÌõ¼þ£ºÈç¹ûÄÜÕÒ¾àÀëÉÏÒ»¸öOKµÄµãµÄ¾àÀëÐ¡ÓÚ5m»ò7mµÄµã£¬ÔòÊÓ×÷³É¹¦ÕÒµ½¶ÔÓ¦µã
         if (cnt == 0 && !OKFLAG) {
             DotIdx = radarFrameTimeIdx[Lane2FrameIdx[i]] + idx[0];
             predict_lot(LastOKIDX, DotIdx, RadarData.begin(), LaneRadarTrack, lastLastOKIdx, predict_x, predict_y);
-            // ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½â¾¶ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã½Ó½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ¸Ã²¿·ÖÓÃÓÚ¼ì²â¾¶ÏòËÙ¶ÈÏà½üÇÒÎ»ÖÃ½Ó½üµÄÀ×´ïÊý¾Ý
             find_relate_data(i, 0, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
             LastOKIDX = cnt;
             OKFLAG = 1;
         }
-        else if (!OKFLAG) { // ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½5mï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        else if (!OKFLAG) { // Èç¹ûÏÂÒ»¸öµãÓëÉÏÒ»¸öµãµÄ¾àÀëÐ¡ÓÚ5m£¬Ôò½ÓÊÜÕâ¸öµã
             for (int limit = 25; limit < 26; limit += 25) {
                 if (OKFLAG)
                     break;
@@ -155,7 +155,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
                             DotIdx = tmpDotIdx;
                             radar_x = RadarData[DotIdx].DistLong;
                             radar_y = RadarData[DotIdx].DistLat;
-                            // ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½â¾¶ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã½Ó½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½
+                            // ¸Ã²¿·ÖÓÃÓÚ¼ì²â¾¶ÏòËÙ¶ÈÏà½üÇÒÎ»ÖÃ½Ó½üµÄÀ×´ïÊý¾Ý
                             find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
                             break;
                         }
@@ -164,7 +164,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             }
         }
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ö±ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ã£¬ï¿½ï¿½Ö±ï¿½ï¿½È¡Â·ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÄ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½OKï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Äµï¿½
+        // µÚÈý¼ìÑéÌõ¼þ£ºÈç¹ûÒ»Ö±ÕÒ²»µ½ÏÂÒ»¸öµã£¬ÔòÖ±½ÓÈ¡Â·¾¶Ç°½ø·½ÏòÉÏµÄ£¬¾àÀëÉÏÒ»¸öOKµÄµã¾àÀë×îÐ¡µÄµã
         if (!OKFLAG) {
             double min_dist = 1000000.0;
             int min_idx = 1;
@@ -183,7 +183,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             DotIdx = radarFrameTimeIdx[Lane2FrameIdx[i]] + min_idx;
             radar_x = RadarData[DotIdx].DistLong;
             radar_y = RadarData[DotIdx].DistLat;
-            // ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½â¾¶ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã½Ó½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ¸Ã²¿·ÖÓÃÓÚ¼ì²â¾¶ÏòËÙ¶ÈÏà½üÇÒÎ»ÖÃ½Ó½üµÄÀ×´ïÊý¾Ý
             find_relate_data(i, min_idx, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
             OKFLAG = true;
         }
@@ -192,84 +192,84 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             --n_map; --mapIdx; continue;
         }
 
-        LaneRadarTrack[cnt][0] = radar_x;   // ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        LaneRadarTrack[cnt][1] = radar_y;   // ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        LaneRadarTrack[cnt][2] = (*(begin + i)).Lat;    // Î³ï¿½ï¿½
-        LaneRadarTrack[cnt][3] = (*(begin + i)).Lon;    // ï¿½ï¿½ï¿½ï¿½
-        LaneRadarTrack[cnt][4] = (*(begin + i)).NorthVelocity;  // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
-        LaneRadarTrack[cnt][5] = (*(begin + i)).EastVelocity;   // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
-        LaneRadarTrack[cnt][6] = RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]]].timestamp;  // Ê±ï¿½ï¿½
-        LaneRadarTrack[cnt][7] = (*(begin + i)).Hgt;    // ï¿½ï¿½ï¿½ï¿½
-        LaneRadarTrack[cnt][8] = sp_mean;  // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
+        LaneRadarTrack[cnt][0] = radar_x;   // ¾àÀëÀ×´ïµÄ×ÝÏò¾àÀë
+        LaneRadarTrack[cnt][1] = radar_y;   // ¾àÀëÀ×´ïµÄºáÏò¾àÀë
+        LaneRadarTrack[cnt][2] = (*(begin + i)).Lat;    // Î³¶È
+        LaneRadarTrack[cnt][3] = (*(begin + i)).Lon;    // ¾­¶È
+        LaneRadarTrack[cnt][4] = (*(begin + i)).NorthVelocity;  // ±±ÏòËÙ¶È
+        LaneRadarTrack[cnt][5] = (*(begin + i)).EastVelocity;   // ¶«ÏòËÙ¶È
+        LaneRadarTrack[cnt][6] = RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]]].timestamp;  // Ê±¼ä
+        LaneRadarTrack[cnt][7] = (*(begin + i)).Hgt;    // º£°Î
+        LaneRadarTrack[cnt][8] = sp_mean;  // ¾¶ÏòËÙ¶È
         ++cnt;
     }
     return LaneRadarTrack;
 }
 
-// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// ³õÊ¼»¯³ÌÐò
 void Solution::init() {
-    // rtk::readRtk("Lane1_rtk.dat", rtkLine1);
-    // rtk::readRtk("Lane2_rtk.dat", rtkLine2);
-    // rtk::readRtk("Lane3_rtk.dat", rtkLine3);
-    // n_Gap = Radar::readRadarData("RadarData.csv", RadarData);
-    // vector<vector<double>> LaneRadarTrack1 = mapLane2Radar(rtkLine1.begin(), rtkLine1.end());
-    // vector<vector<double>> LaneRadarTrack2 = mapLane2Radar(rtkLine2.begin(), rtkLine2.end());
-    // vector<vector<double>> LaneRadarTrack3 = mapLane2Radar(rtkLine3.begin(), rtkLine3.end());
-    // double k1 = 0.0, k2 = 0.0, k3 = 0.0, b1 = 0.0, b2 = 0.0, b3 = 0.0, arcTan = 0.0;
-    // int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
-    // vector<double> LaneRadarTrackX1(nLane1);
-    // vector<double> LaneRadarTrackY1(nLane1);
-    // vector<double> LaneRadarTrackAti1(nLane1);
-    // vector<double> LaneRadarTrackX2(nLane2);
-    // vector<double> LaneRadarTrackY2(nLane2);
-    // vector<double> LaneRadarTrackAti2(nLane2);
-    // vector<double> LaneRadarTrackX3(nLane3);
-    // vector<double> LaneRadarTrackY3(nLane3);
-    // vector<double> LaneRadarTrackAti3(nLane3);
-    // for (int i = 0; i < nLane1; ++i) {
+    //rtk::readRtk("./data/Lane1_rtk.dat", rtkLine1);
+    //rtk::readRtk("./data/Lane2_rtk.dat", rtkLine2);
+    //rtk::readRtk("./data/Lane3_rtk.dat", rtkLine3);
+    //n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
+    //vector<vector<double>> LaneRadarTrack1 = mapLane2Radar(rtkLine1.begin(), rtkLine1.end());
+    //vector<vector<double>> LaneRadarTrack2 = mapLane2Radar(rtkLine2.begin(), rtkLine2.end());
+    //vector<vector<double>> LaneRadarTrack3 = mapLane2Radar(rtkLine3.begin(), rtkLine3.end());
+    //double k1 = 0.0, k2 = 0.0, k3 = 0.0, b1 = 0.0, b2 = 0.0, b3 = 0.0, arcTan = 0.0;
+    //int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
+    //vector<double> LaneRadarTrackX1(nLane1);
+    //vector<double> LaneRadarTrackY1(nLane1);
+    //vector<double> LaneRadarTrackAti1(nLane1);
+    //vector<double> LaneRadarTrackX2(nLane2);
+    //vector<double> LaneRadarTrackY2(nLane2);
+    //vector<double> LaneRadarTrackAti2(nLane2);
+    //vector<double> LaneRadarTrackX3(nLane3);
+    //vector<double> LaneRadarTrackY3(nLane3);
+    //vector<double> LaneRadarTrackAti3(nLane3);
+    //for (int i = 0; i < nLane1; ++i) {
     //    LaneRadarTrackX1[i] = LaneRadarTrack1[i][0];
     //    LaneRadarTrackY1[i] = LaneRadarTrack1[i][1];
     //    LaneRadarTrackAti1[i] = LaneRadarTrack1[i][7];
     //    arcTan += atan(LaneRadarTrack1[i][4] / LaneRadarTrack1[i][5]);
     //    latitudeMean += LaneRadarTrack1[i][2];
-    // }
-    // for (int i = 0; i < nLane2; ++i) {
+    //}
+    //for (int i = 0; i < nLane2; ++i) {
     //    LaneRadarTrackX2[i] = LaneRadarTrack2[i][0];
     //    LaneRadarTrackY2[i] = LaneRadarTrack2[i][1];
     //    LaneRadarTrackAti2[i] = LaneRadarTrack2[i][7];
     //    arcTan += atan(LaneRadarTrack2[i][4] / LaneRadarTrack2[i][5]);
     //    latitudeMean += LaneRadarTrack2[i][2];
-    // }
-    // for (int i = 0; i < nLane3; ++i) {
+    //}
+    //for (int i = 0; i < nLane3; ++i) {
     //    LaneRadarTrackX3[i] = LaneRadarTrack3[i][0];
     //    LaneRadarTrackY3[i] = LaneRadarTrack3[i][1];
     //    LaneRadarTrackAti3[i] = LaneRadarTrack3[i][7];
     //    arcTan += atan(LaneRadarTrack3[i][4] / LaneRadarTrack3[i][5]);
     //    latitudeMean += LaneRadarTrack3[i][2];
-    // }
-    // line_plofit(LaneRadarTrackX1, LaneRadarTrackY1, k1, b1);
-    // line_plofit(LaneRadarTrackX2, LaneRadarTrackY2, k2, b2);
-    // line_plofit(LaneRadarTrackX3, LaneRadarTrackY3, k3, b3);
-    // k = (k1 + k2 + k3) / 3;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½Ïµï¿½Ð±ï¿½ï¿½
-    // double theta1 = arcTan / (nLane1 + nLane2 + nLane3);    // ï¿½ï¿½Î³ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÖ®ï¿½ï¿½Ä½Ç¶ï¿½Æ«ï¿½ï¿½
-    // theta2 = atan(k);    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÖ®ï¿½ï¿½Ä½Ç¶ï¿½Æ«ï¿½ï¿½
-    // theta0 = theta1 - theta2 + 0.003121;
-    // latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // Æ½ï¿½ï¿½Î³ï¿½ï¿½
-    // ori_longitude = 0.0, ori_latitude = 0.0;
-    // cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
-    // b_left = 0.0, b_right = 0.0;
-    // get_intercept(k, b1, b3, b_left, b_right);
-    // cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
+    //}
+    //line_plofit(LaneRadarTrackX1, LaneRadarTrackY1, k1, b1);
+    //line_plofit(LaneRadarTrackX2, LaneRadarTrackY2, k2, b2);
+    //line_plofit(LaneRadarTrackX3, LaneRadarTrackY3, k3, b3);
+    //k = (k1 + k2 + k3) / 3;  // ³µµÀÔÚÀ×´ï×ø±êÏµÉÏµÄÐ±ÂÊ
+    //double theta1 = arcTan / (nLane1 + nLane2 + nLane3);    // ¾­Î³¶ÈÓëÀ×´ï×ø±êÏµÖ®¼äµÄ½Ç¶ÈÆ«²î
+    //theta2 = atan(k);    // ³µµÀÓëÀ×´ï×ø±êÏµÖ®¼äµÄ½Ç¶ÈÆ«²î
+    //theta0 = theta1 - theta2 + 0.003121;
+    //latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // Æ½¾ùÎ³¶È
+    //ori_longitude = 0.0, ori_latitude = 0.0;
+    //cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
+    //b_left = 0.0, b_right = 0.0;
+    //get_intercept(k, b1, b3, b_left, b_right);
+    //cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
 
-    // double kAti1 = 0.0, kAti2 = 0.0, kAti3 = 0.0, bAti1 = 0.0, bAti2 = 0.0, bAti3 = 0.0;
-    // line_plofit(LaneRadarTrackX1, LaneRadarTrackAti1, kAti1, bAti1);
-    // line_plofit(LaneRadarTrackX2, LaneRadarTrackAti2, kAti2, bAti2);
-    // line_plofit(LaneRadarTrackX3, LaneRadarTrackAti3, kAti3, bAti3);
-    // kAti = (kAti1 + kAti2 + kAti3) / 3;
-    // bAti = (bAti1 + bAti2 + bAti3) / 3;
+    //double kAti1 = 0.0, kAti2 = 0.0, kAti3 = 0.0, bAti1 = 0.0, bAti2 = 0.0, bAti3 = 0.0;
+    //line_plofit(LaneRadarTrackX1, LaneRadarTrackAti1, kAti1, bAti1);
+    //line_plofit(LaneRadarTrackX2, LaneRadarTrackAti2, kAti2, bAti2);
+    //line_plofit(LaneRadarTrackX3, LaneRadarTrackAti3, kAti3, bAti3);
+    //kAti = (kAti1 + kAti2 + kAti3) / 3;
+    //bAti = (bAti1 + bAti2 + bAti3) / 3;
 
-    // ï¿½ê¶¨ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    n_Gap = Radar::readRadarData("RadarData.csv", RadarData);
+    // ±ê¶¨²ÎÊýÔ¤ÏÈÉèÖÃ
+    n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
     theta2 = 0;
     cosTheta2 = 1;
     sinTheta2 = 0;
@@ -284,39 +284,39 @@ void Solution::init() {
     bAti = 26.899624552922948;
 }
 
-// ï¿½ï¿½ï¿½ã·¨
+// Ö÷Ëã·¨
 void Solution::run() {
 
-    // ***********************************ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½***********************************
+    // ***********************************¿¨¶ûÂüÂË²¨Æ÷³õÊ¼»¯***********************************
     double deltat = 1;
-    vector<vector<double>> A = { {1, deltat}, {0, 1} };   // ×´Ì¬×ªï¿½Æ¾ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ê±ï¿½Ìµï¿½×´Ì¬×ªï¿½Æµï¿½ï¿½ï¿½Ç°Ê±ï¿½ï¿½
-    vector<vector<double>> Q = { {0.5, 0}, {0, 0.01} };   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½ï¿½p(w)~N(0, Q)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ²ï¿½È·ï¿½ï¿½ï¿½ï¿½
-    vector<vector<double>> R = { {4, 0}, {0, 0.04} };     // ï¿½Û²ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½p(v)~N(0, R)
-    vector<vector<double>> H = { {1, 0}, {0, 1} };        // ×´Ì¬ï¿½Û²ï¿½ï¿½ï¿½ï¿½
-    vector<vector<double>> P = { {4, 0}, {0, 0.04} };     // ×´Ì¬ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½P 
-    vector<vector<double>> P_posterior = { {4, 0}, {0, 0.04} };   // ×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    vector<vector<double>> eyeMatrix = { {1.0, 0}, {0, 1.0} };  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½
+    vector<vector<double>> A = { {1, deltat}, {0, 1} };   // ×´Ì¬×ªÒÆ¾ØÕó£¬ÉÏÒ»Ê±¿ÌµÄ×´Ì¬×ªÒÆµ½µ±Ç°Ê±¿Ì
+    vector<vector<double>> Q = { {0.5, 0}, {0, 0.01} };   // ¹ý³ÌÔëÉùÐ­·½²î¾ØÕóQ£¬p(w)~N(0, Q)£¬ÔëÉùÀ´×ÔÕæÊµÊÀ½çÖÐµÄ²»È·¶¨ÐÔ
+    vector<vector<double>> R = { {4, 0}, {0, 0.04} };     // ¹Û²âÔëÉùÐ­·½²î¾ØÕóR£¬p(v)~N(0, R)
+    vector<vector<double>> H = { {1, 0}, {0, 1} };        // ×´Ì¬¹Û²â¾ØÕó
+    vector<vector<double>> P = { {4, 0}, {0, 0.04} };     // ×´Ì¬¹À¼ÆÐ­·½²î¾ØÕóP 
+    vector<vector<double>> P_posterior = { {4, 0}, {0, 0.04} };   // ×´Ì¬ºóÑé¹À¼ÆÐ­·½²î¾ØÕó
+    vector<vector<double>> eyeMatrix = { {1.0, 0}, {0, 1.0} };  // ´´½¨µ¥Î»¾ØÕó
 
-    // ************************************ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½************************************
+    // ************************************³õÊ¼»¯ºÍ²ÎÊýÉèÖÃ************************************
     int n_radar_data = RadarData.size();
-    vector<int> frameGapIdx(n_Gap + 1, 0);      // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿Ò»Ö¡ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½ï¿½Öµï¿½Î»ï¿½ï¿½
+    vector<int> frameGapIdx(n_Gap + 1, 0);      // Ô¤ÏÈËã³öÃ¿Ò»Ö¡µÄµÚÒ»¸öÊý¾ÝÔÚÀ×´ïÊý¾ÝÖÐ³öÏÖµÄÎ»ÖÃ
     frameGapIdx[n_Gap] = n_radar_data;
 
-    double carA = 5.0;    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ÎªcarAm / s ^ 2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë¸ºï¿½ï¿½ï¿½
-    double maxCarX = 10.0;// Ô¤ï¿½è³µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªmaxCarXm
-    double maxCarY = 2.0; // Ô¤ï¿½è³µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªmaxCarYm
+    double carA = 5.0;    // ÉèÖÃÆû³µÔÚÒ»°ãÇé¿öÏÂµÄ×î´ó¼ÓËÙ¶ÈÎªcarAm / s ^ 2£¬°üÀ¨ÕýÏòÓë¸ºÏòµÄ
+    double maxCarX = 10.0;// Ô¤Éè³µÁ¾³¤¶ÈÎªmaxCarXm
+    double maxCarY = 2.0; // Ô¤Éè³µÁ¾¿í¶ÈÎªmaxCarYm
     double maxVarX = 0.0, maxVarY = 0.0;
-    getMaxVarX_MaxVarY(maxCarX, maxCarY, theta2, maxVarX, maxVarY);    // ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
+    getMaxVarX_MaxVarY(maxCarX, maxCarY, theta2, maxVarX, maxVarY);    // ÉèÖÃÍ¬Ò»Á¾³µµÄÔÚÇ°ºóÖ¡µÄÔÚ³µµÀÉÏµÄ×î´ó×ÝÏò¾àÀëÆ«²îºÍ×î´óºáÏò¾àÀëÆ«²î
 
-    double maxVarRCS = 1500.0;    // ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½Ö¡ï¿½ï¿½RCSÆ«ï¿½ï¿½
-    double RadarHeight = 7.0;   // ï¿½×´ï¿½ß¶ï¿½
-    double RCSMin = 5.0;        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡RCS
-    double RCSMinZero = 10.0;   // ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ä¾ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½Îª0Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡RCS
-    double RCSMinSingle = 5.0; // ï¿½ï¿½Ö»ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµã±»Ì½ï¿½âµ½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡RCS
-    double carSpeedVar = 0.4;   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í¬Ò»Ö¡ï¿½ÚµÄ£ï¿½ï¿½×´ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½Ù¶Èµï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
-    int interpolationLimCnt = 1;// ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½interpolationLimCntï¿½ó£¬²ï¿½ï¿½Ù²ï¿½Ö¡
-    int interpolationLimM = 400;// ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½Æ£ï¿½ï¿½×£ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½interpolationLimMï¿½ó£¬²ï¿½ï¿½Ù²ï¿½Ö¡
-    int maxFailTime = 20;        // ï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½Ê§ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    double maxVarRCS = 1500.0;    // ÉèÖÃÍ¬Ò»Á¾³µµÄÔÚÇ°ºóÖ¡µÄRCSÆ«²î
+    double RadarHeight = 7.0;   // À×´ï¸ß¶È
+    double RCSMin = 5.0;        // ÔÊÐíµÄ×îÐ¡RCS
+    double RCSMinZero = 10.0;   // µ±À×´ïÊý¾ÝµãµÄ¾¶ÏòËÙ¶ÈÎª0Ê±£¬ÔÊÐíµÄ×îÐ¡RCS
+    double RCSMinSingle = 5.0; // µ±Ö»ÓÐÒ»¸öÓÐÐ§µÄÀ×´ïÊý¾Ýµã±»Ì½²âµ½Ê±£¬ÔÊÐíµÄ×îÐ¡RCS
+    double carSpeedVar = 0.4;   // ÉèÖÃÕë¶ÔÍ¬Ò»Á¾³µµÄ£¬Í¬Ò»Ö¡ÄÚµÄ£¬À×´ïµÄ¾¶ÏòËÙ¶ÈµÄ×î´óÆ«²î
+    int interpolationLimCnt = 1;// ²¹Ö¡ÏÞÖÆ£¬´Ë´¦£¬±íÊ¾Á¬Ðø²¹Ö¡³¬¹ýinterpolationLimCntºó£¬²»ÔÙ²¹Ö¡
+    int interpolationLimM = 400;// ²¹Ö¡ÏÞÖÆ£¬Ã×£¬±íÊ¾³¬¹ýinterpolationLimMºó£¬²»ÔÙ²¹Ö¡
+    int maxFailTime = 20;        // ÔÊÐí×·×ÙÊ§°ÜµÄ×î´ó´ÎÊý
     // ****************************************************************************************
 
     double lastTime = 0;
@@ -328,23 +328,23 @@ void Solution::run() {
         ++cnt;
     }
 
-    vector<int> carID_buffer(10000, 1); // ï¿½ï¿½Â¼ï¿½ï¿½carIDï¿½ï¿½ï¿½ÖµÄ´ï¿½ï¿½ï¿½
+    vector<int> carID_buffer(10000, 1); // ¼ÇÂ¼¸÷carID³öÏÖµÄ´ÎÊý
     vector<vector<double>> tracer_Pbuffer(500, vector<double>(2, 0));
-    vector<vector<int>> tracer_buffer(500, vector<int>(4, 0)); // ï¿½ï¿½1ï¿½Ð¼ï¿½Â¼ï¿½ï¿½Ç°Ò»Ö¡×·ï¿½ÙµÄ´ï¿½ï¿½ï¿½ï¿½all_resï¿½ÐµÄ±ï¿½Å£ï¿½ï¿½ï¿½2ï¿½Ð¼ï¿½Â¼ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½RadarDataï¿½ÐµÄ±ï¿½Å£ï¿½ï¿½ï¿½3ï¿½Ð¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½Ê§ï¿½ÜµÄ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½4ï¿½Ð¼ï¿½Â¼ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½×·ï¿½Ùµï¿½ï¿½ï¿½
-    int tracer_pointer = -1;     // tracer_pointerï¿½ï¿½Ô¶Ö¸ï¿½ï¿½bufferï¿½Ðµï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ð§Ôªï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Îªï¿½ï¿½Ð§Ôªï¿½ï¿½
+    vector<vector<int>> tracer_buffer(500, vector<int>(4, 0)); // µÚ1ÁÐ¼ÇÂ¼ÔÚÇ°Ò»Ö¡×·×ÙµÄ´æ·ÅÔÚall_resÖÐµÄ±àºÅ£¬µÚ2ÁÐ¼ÇÂ¼¶ÔÓ¦µÄÔÚRadarDataÖÐµÄ±àºÅ£¬µÚ3ÁÐ¼ÇÂ¼Á¬Ðø×·×ÙÊ§°ÜµÄ´ÎÊý£¬µÚ4ÁÐ¼ÇÂ¼µ±Ç°Á¬Ðø×·×ÙµãÊý
+    int tracer_pointer = -1;     // tracer_pointerÓÀÔ¶Ö¸ÏòbufferÖÐµÄ×îºóÒ»¸öÓÐÐ§ÔªËØ£¬ÇÒÆäÇ°Ãæ¾ùÎªÓÐÐ§ÔªËØ
     int data_idx = -1;
-    vector<res> all_res(n_radar_data / 10);         // ï¿½ï¿½Â¼È«ï¿½ï¿½ï¿½ï¿½
-    vector<float> maxCarsLen(n_radar_data / 10);    // ï¿½ï¿½Â¼ï¿½ï¿½ó³µ³ï¿½ï¿½ï¿½Ï¢
+    vector<res> all_res(n_radar_data / 10);         // ¼ÇÂ¼È«Ìå½á¹û
+    vector<float> maxCarsLen(n_radar_data / 10);    // ¼ÇÂ¼×î´ó³µ³¤ÐÅÏ¢
     int carUniqueId = -1;
     for (int cnt = 0; cnt < n_Gap; ++cnt) {
-        int frameStart = frameGapIdx[cnt];  // ï¿½ï¿½Ç°Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½Ê¼Î»
-        int nFrame = frameGapIdx[cnt + 1] - frameGapIdx[cnt]; // ï¿½ï¿½Ö¡ï¿½ï¿½Ö¡ï¿½ï¿½
+        int frameStart = frameGapIdx[cnt];  // µ±Ç°Ö¡µÄÔÚÀ×´ïÊý¾ÝµÄÆðÊ¼Î»
+        int nFrame = frameGapIdx[cnt + 1] - frameGapIdx[cnt]; // ¸ÃÖ¡µÄÖ¡Êý
         vector<int> OKIndex;
         for (int i = 0; i < nFrame; ++i) {
             double y = RadarData[frameStart + i].DistLat, x = RadarData[frameStart + i].DistLong;
             double rcs = RadarData[frameStart + i].RCS;
             if (check_in_zone(k, b_left, b_right, x, y) && rcs > RCSMin) {
-                if (RadarData[frameStart + i].VeloRadial == 0 && RadarData[frameStart + i].RCS < RCSMinZero) // ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½Ù¶ï¿½Îª0ï¿½ï¿½ï¿½ï¿½RCS < RCSMinZeroï¿½ï¿½È¥ï¿½ï¿½
+                if (RadarData[frameStart + i].VeloRadial == 0 && RadarData[frameStart + i].RCS < RCSMinZero) // Èç¹û¸ÃµãËÙ¶ÈÎª0£¬ÇÒRCS < RCSMinZero£¬È¥µô
                     continue;
                 OKIndex.push_back(i);
             }
@@ -374,11 +374,11 @@ void Solution::run() {
             });
         if (OKIndexPointer_len == 0)
             continue;
-        double nowT = curFrameData[0].timestamp;    // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Úµï¿½Ê±ï¿½ï¿½
+        double nowT = curFrameData[0].timestamp;    // ¼ÇÂ¼ÏÖÔÚµÄÊ±¿Ì
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ã·¨
+        // ¸ú×ÙËã·¨
         int i = 0;
-        while (i <= tracer_pointer && tracer_pointer > -1) {  // ï¿½Ú¸ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï£¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½È¶Ôµï¿½Ç°Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½Æ¥ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        while (i <= tracer_pointer && tracer_pointer > -1) {  // ÔÚ¸ú×Ù¶ÓÁÐÀï£¬Ò»¸ö¸ö±È¶Ôµ±Ç°Ö¡µÄÊý¾Ý£¬Æ¥Åä³É¹¦µÄÊý¾Ýµã£¬½«±»ÄÃ×ß
             int dataID = tracer_buffer[i][0];
             int radarDataID = tracer_buffer[i][1];
             int carID = all_res[dataID].Object_ID;
@@ -392,51 +392,51 @@ void Solution::run() {
             P_posterior[0] = tracer_Pbuffer[i * 2];
             P_posterior[1] = tracer_Pbuffer[i * 2 + 1];
             bool coupleFlag = false;
-            int j = 0;  // jÖ¸ï¿½ï¿½curFrameDataï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ýµï¿½
+            int j = 0;  // jÖ¸ÏòcurFrameDataÊý¾ÝÖÐµÄÊý¾Ýµã
 
-            while (j < OKIndexPointer_len) {    // ï¿½ï¿½OKIndexï¿½ï¿½Ñ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×·ï¿½ÙµÄ³ï¿½ï¿½ï¿½Æ¥ï¿½ï¿½Äµã£¬ï¿½Òµï¿½Ö®ï¿½ó£¬°ï¿½ï¿½ï¿½ï¿½ï¿½OKIndexï¿½ï¿½É¾ï¿½ï¿½
+            while (j < OKIndexPointer_len) {    // ÔÚOKIndexÀïÑ°ÕÒÄÜÓëÕýÔÚ×·×ÙµÄ³µÁ¾Æ¥ÅäµÄµã£¬ÕÒµ½Ö®ºó£¬°ÑËü´ÓOKIndexÖÐÉ¾³ý
                 if (BlockIndex[j]) {
                     ++j; continue;
                 }
-                if (std::abs(carSpeed - curFrameData[sortedIdx[j]].VeloRadial) / cosTheta2 > deltaT * carA) { // (deltaTï¿½ï¿½0.025~0.2Ö®ï¿½ï¿½)
+                if (abs(carSpeed - curFrameData[sortedIdx[j]].VeloRadial) / cosTheta2 > deltaT * carA) { // (deltaTÔÚ0.025~0.2Ö®¼ä)
                     ++j; continue;
                 }
-                if (std::abs(carDisLat - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
+                if (abs(carDisLat - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
                     ++j; continue;
                 }
-                if (std::abs(carRCS - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
+                if (abs(carRCS - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
                     ++j; continue;
                 }
-                double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // ï¿½ï¿½ï¿½ã³µï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½Ù¶È£ï¿½Ä¬ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê»
-                double X_predict = carDisLog + deltaT * v_true * cosTheta2;    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
-                if (std::abs(curFrameData[sortedIdx[j]].DistLong - X_predict) > maxVarX) {
+                double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // ¼ÆËã³µÁ¾µÄÊµ¼ÊËÙ¶È£¬Ä¬ÈÏ³µÁ¾ÑØ×Å³µµÀ·½ÏòÐÐÊ»
+                double X_predict = carDisLog + deltaT * v_true * cosTheta2;    // ³µÁ¾µÄÔ¤²â×ÝÏòÎ»ÖÃ
+                if (abs(curFrameData[sortedIdx[j]].DistLong - X_predict) > maxVarX) {
                     ++j; continue;
                 }
 
-                // Æ¥ï¿½ï¿½É¹ï¿½
+                // Æ¥Åä³É¹¦
                 coupleFlag = true;
                 double X_mean = curFrameData[sortedIdx[j]].DistLong;  double X_sum = X_mean;
                 double Y_mean = curFrameData[sortedIdx[j]].DistLat;  double Y_sum = Y_mean;
                 double sp_mean = curFrameData[sortedIdx[j]].VeloRadial; double sp_sum = sp_mean;
                 double RCS_mean = curFrameData[sortedIdx[j]].RCS; double RCS_sum = RCS_mean;
                 double Xmin = X_mean, Xmax = X_mean;
-                BlockIndex[j] = true;   // Æ¥ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                BlockIndex[j] = true;   // Æ¥Åä³É¹¦µÄÊý¾Ýµã£¬½«±»ÄÃ×ß
                 int jStart = j, tmpCnt = 1;
                 ++j;
                 while (j < OKIndexPointer_len) {
                     if (BlockIndex[j]) {
                         ++j; continue;
                     }
-                    if (std::abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
+                    if (abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
                         ++j; continue;
                     }
-                    if (std::abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
+                    if (abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
                         ++j; continue;
                     }
-                    if (std::abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
+                    if (abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
                         ++j; continue;
                     }
-                    if (std::abs(RCS_mean - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
+                    if (abs(RCS_mean - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
                         ++j; continue;
                     }
                     if (curFrameData[sortedIdx[j]].DistLong < Xmin)
@@ -451,7 +451,7 @@ void Solution::run() {
                     Y_sum = Y_sum + curFrameData[sortedIdx[j]].DistLat;   Y_mean = Y_sum / tmpCnt;
                     sp_sum = sp_sum + curFrameData[sortedIdx[j]].VeloRadial;  sp_mean = sp_sum / tmpCnt;
                     RCS_sum = RCS_sum + curFrameData[sortedIdx[j]].RCS; RCS_mean = RCS_sum / tmpCnt;
-                    BlockIndex[j] = true;  // Æ¥ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    BlockIndex[j] = true;  // Æ¥Åä³É¹¦µÄÊý¾Ýµã£¬½«±»ÄÃ×ß
                     ++j;
                 }
                 ++data_idx;
@@ -461,22 +461,22 @@ void Solution::run() {
                     Y_mean = carDisLat;
                 }
 
-                //// ----------------------ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---------------------
+                //// ----------------------½øÐÐÏÈÑé¹À¼Æ---------------------
                 //A = { {1, deltaT}, {0, 1} };
                 //vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
                 //vector<vector<double>>X_prior = matrixMultiply(A, X_last);
-                //// -----------------ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½P----------------
+                //// -----------------¼ÆËã×´Ì¬¹À¼ÆÐ­·½²î¾ØÕóP----------------
                 //vector<vector<double>> A_transpose = transposeMatrix(A);
                 //vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
                 //vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
                 //vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
-                //// ----------------------ï¿½ï¿½ï¿½ã¿¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-------------------
-                //R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // ï¿½Û²ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½p(v)~N(0,R)
+                //// ----------------------¼ÆËã¿¨¶ûÂüÔöÒæ-------------------
+                //R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // ¹Û²âÔëÉùÐ­·½²î¾ØÕóR£¬p(v)~N(0,R)
                 //vector<vector<double>> H_transpose = transposeMatrix(H);
                 //vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
                 //vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
                 //vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
-                //// ------------------------ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-----------------------
+                //// ------------------------ºóÑé¹À¼Æ-----------------------
                 //vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
                 //vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
 
@@ -484,26 +484,26 @@ void Solution::run() {
                 //    X_mean = X_posterior[0][0];
                 //    sp_mean = X_posterior[1][0];
                 //}
-                //else {      // ï¿½ï¿½ï¿½ï¿½Ë²ï¿½Öµ>400ï¿½ï¿½ï¿½ò²»²ï¿½ï¿½ï¿½ï¿½Ë²ï¿½Öµï¿½ï¿½ï¿½ï¿½Ç¿ï¿½Ð½ï¿½ï¿½ï¿½×·ï¿½ï¿½
+                //else {      // Èç¹ûÂË²¨Öµ>400£¬Ôò²»²ÉÓÃÂË²¨Öµ£¬²¢Ç¿ÐÐ½áÊø×·×Ù
                 //    coupleFlag = 0;
                 //    tracer_buffer[i][2] = maxFailTime + 1;
                 //}
 
-                //// --------------- ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½P-----------------
+                //// --------------- ¸üÐÂ×´Ì¬¹À¼ÆÐ­·½²î¾ØÕóP-----------------
                 //P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
 
                 maxCarsLen[data_idx] = maxCarLen;
                 ++carID_buffer[carID];
                 writeSingleResult(nowT, carID, X_mean, Y_mean, carDisLat, RadarHeight, sp_mean, RCS_mean, RadarDataID, all_res, data_idx, maxCarLen);
-                // ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ¸üÐÂÔÚ»º³åÇøµÄÊý¾Ý
                 tracer_buffer[i][0] = data_idx;
                 tracer_buffer[i][1] = RadarDataID;
-                tracer_buffer[i][2] = 0;    // ï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½Ê§ï¿½Ü´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                tracer_buffer[i][2] = 0;    // Á¬Ðø×·×ÙÊ§°Ü´ÎÊý¹éÁã
                 ++tracer_buffer[i][3];
                 setRows(tracer_Pbuffer, P_posterior, i);
                 break;
             }
-            if (!coupleFlag) {  // Æ¥ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý´Ó»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½Æ³ï¿½
+            if (!coupleFlag) {  // Æ¥ÅäÊ§°Ü£¬ÏÈÊÔ×ÅÁôÔÚ¸ú×Ù¶ÓÁÐÀï£¬Èç¹û³ÖÐøÊ§°Ü£¬¸Ã¸ú×ÙÊý¾Ý´Ó»º³åÇøÖÐ±»ÒÆ³ý
                 if (tracer_buffer[i][2] > maxFailTime) {
                     tracer_buffer[i][0] = tracer_buffer[tracer_pointer][0];
                     tracer_buffer[i][1] = tracer_buffer[tracer_pointer][1];
@@ -524,8 +524,8 @@ void Solution::run() {
                 ++i;
         }
 
-        // Ê¶ï¿½ï¿½ï¿½ã·¨
-        int j = 0;  // jÖ¸ï¿½ï¿½curFrameDataï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½Ýµï¿½
+        // Ê¶±ðËã·¨
+        int j = 0;  // jÖ¸ÏòcurFrameDataÊý¾ÝÖÐµÄÊý¾Ýµã
         while (j < OKIndexPointer_len) {
             if (BlockIndex[j]) {
                 ++j; continue;
@@ -537,7 +537,7 @@ void Solution::run() {
                 BlockIndex[j] = 1; ++j;  continue;
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Ð¿ï¿½ï¿½Ü·ï¿½ï¿½Ö³ï¿½ï¿½ï¿½
+            // ÔÚÊý¾ÝÖÐÈÏÎªÓÐ¿ÉÄÜ·¢ÏÖ³µÁ¾
             double X_mean = curFrameData[sortedIdx[j]].DistLong;  double X_sum = X_mean;
             double Y_mean = curFrameData[sortedIdx[j]].DistLat;  double Y_sum = Y_mean;
             double sp_mean = curFrameData[sortedIdx[j]].VeloRadial; double sp_sum = sp_mean;
@@ -551,13 +551,13 @@ void Solution::run() {
                 if (BlockIndex[j]) {
                     ++j; continue;
                 }
-                if (std::abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
+                if (abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
                     ++j; continue;
                 }
-                if (std::abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
+                if (abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
                     ++j; continue;
                 }
-                if (std::abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
+                if (abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
                     ++j; continue;
                 }
                 if (curFrameData[sortedIdx[j]].DistLong < Xmin) {
@@ -571,7 +571,7 @@ void Solution::run() {
                 Y_sum = Y_sum + curFrameData[sortedIdx[j]].DistLat;   Y_mean = Y_sum / tmpCnt;
                 sp_sum = sp_sum + curFrameData[sortedIdx[j]].VeloRadial;  sp_mean = sp_sum / tmpCnt;
                 RCS_sum = RCS_sum + curFrameData[sortedIdx[j]].RCS; RCS_mean = RCS_sum / tmpCnt;
-                BlockIndex[j] = true; // Æ¥ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                BlockIndex[j] = true; // Æ¥Åä³É¹¦µÄÊý¾Ýµã£¬½«±»ÄÃ×ß
                 ++j;
             }
             if (coupleFlag) {
@@ -596,7 +596,7 @@ void Solution::run() {
      res::writeResult("result.csv", all_res, carID_buffer);
 }
 
-// Ð´ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// Ð´ÏÂµ¥Ìõ½á¹û
 void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int RadarDataID, vector<res>& all_res, int data_idx, float maxCarLen) {
     all_res[data_idx].Timestamp = nowT;
     all_res[data_idx].Object_ID = carUniqueId;
@@ -604,12 +604,12 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
     all_res[data_idx].Object_DistLat = Y_mean;
     double sp_true = v_true_cal(X_mean, Y_mean, RadarHeight, sp_mean, cosTheta2);
     all_res[data_idx].Object_VeloLong = sp_true * cosTheta2;
-    if (std::abs(Y_mean - carLat) < 0.0001)
+    if (abs(Y_mean - carLat) < 0.0001)
         all_res[data_idx].Object_VeloLat = 0;
     else if (Y_mean > carLat)
-        all_res[data_idx].Object_VeloLat = std::abs(sp_true * sinTheta2);
+        all_res[data_idx].Object_VeloLat = abs(sp_true * sinTheta2);
     else
-        all_res[data_idx].Object_VeloLat = -std::abs(sp_true * sinTheta2);
+        all_res[data_idx].Object_VeloLat = -abs(sp_true * sinTheta2);
 
     all_res[data_idx].Object_RCS = RCS_mean;
     if (maxCarLen < 7.5)
@@ -621,7 +621,7 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
     all_res[data_idx].Object_Latitude = latitude;
     all_res[data_idx].Object_Longitude = longitude;
     all_res[data_idx].Object_Altitude = kAti * X_mean + bAti;
-    if (std::abs(sp_true) == 0)
+    if (abs(sp_true) == 0)
         all_res[data_idx].Object_parking = 1;
     else
         all_res[data_idx].Object_parking = 0;
@@ -629,40 +629,40 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
         all_res[data_idx].Object_retrograde = 1;
     else
         all_res[data_idx].Object_retrograde = 0;
-    if (std::abs(sp_true) > 16.6667)
+    if (abs(sp_true) > 16.6667)
         all_res[data_idx].Object_overspeed = 1;
     else
         all_res[data_idx].Object_overspeed = 0;
 
 }
 
-// ï¿½ï¿½ï¿½Ýºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ä¾ï¿½Î³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// ¸ù¾Ýºá¾à×ÝÏò¾àÀëÓëºáÏò¾àÀë£¬»ñµÃÏàÓ¦µÄ¾­Î³¶È×ø±ê
 void Solution::getCoordinate(double distLong, double distLati, double& longitude, double& latitude) {
-    double R = 6371393.0;   // ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ë¾¶
-    double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú¾ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½Ô½ï¿½Ä¶ï¿½ï¿½ï¿½
-    double latitude_gap_per_meter = 360 / (2 * PI * R); // ï¿½Ï±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Î³ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½
+    double R = 6371393.0;   // µØÇòÆ½¾ù°ë¾¶
+    double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // ¶«Î÷·½ÏòµÄÒ»Ã×ÔÚ¾­¶ÈÉÏ¿çÔ½µÄ¶ÈÊý
+    double latitude_gap_per_meter = 360 / (2 * PI * R); // ÄÏ±±·½ÏòµÄÒ»Ã×ÔÚÎ³¶ÈÉÏ¿çÓòµÄ¶ÈÊý
     double westDeg = longitude_gap_per_meter * (distLong * cos(theta0) - distLati * sin(theta0));
     double southDeg = latitude_gap_per_meter * (distLong * sin(theta0) + distLati * cos(theta0));
     longitude = ori_longitude + westDeg;
     latitude = ori_latitude + southDeg;
 }
 
-// GPSTÊ±ï¿½ï¿½×ªï¿½ï¿½ÎªUNIXÊ±ï¿½ï¿½
+// GPSTÊ±¼ä×ª»»ÎªUNIXÊ±¼ä
 double GPST2UNIX(int weeks, double second_in_weeks) {
     int UNIX_TO_GPST = 315964800;
     return UNIX_TO_GPST + 24 * 60 * 60 * 7 * weeks + second_in_weeks - 18;
 }
 
-// Ô¤ï¿½â³µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ö¡ï¿½ï¿½ï¿½Öµï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½Ê·ï¿½Ù¶ï¿½ï¿½ëµ±Ç°ï¿½Ù¶ï¿½ï¿½ï¿½Ò»ï¿½ï¿½È¨ï¿½â£¬ï¿½ï¿½È¨ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È³ï¿½ï¿½Ô¾ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Ãµï¿½Ô¤ï¿½ï¿½Î»ï¿½ï¿½
+// Ô¤²â³µÁ¾ÔÚÏÂÒ»Ö¡³öÏÖµÄÎ»ÖÃ£¬½«ÀúÊ·ËÙ¶ÈÓëµ±Ç°ËÙ¶È×öÒ»¸öÈ¨ºâ£¬ÓÃÈ¨ºâºóµÄËÙ¶È³ËÒÔ¾­¹ýµÄÊ±¼ä£¬¼ÓÉÏÔ­±¾µÄÎ»ÖÃ£¬¼´µÃµ½Ô¤²âÎ»ÖÃ
 void predict_lot(int LastOKIDX, int tmpDotIdx, vector<Radar>::iterator radarBegin, const vector<vector<double>>& LaneRadarTrack, int lastLastOKIdx, double& predict_x, double& predict_y) {
     if (lastLastOKIdx == LastOKIDX) {
         predict_x = (*(radarBegin + tmpDotIdx)).DistLong;
         predict_y = (*(radarBegin + tmpDotIdx)).DistLat;
     }
     else {
-        double delta_t1 = (*(radarBegin + tmpDotIdx)).timestamp - LaneRadarTrack[LastOKIDX][6]; // ï¿½ï¿½Ç°Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½É¿ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ö®ï¿½ï¿½
-        double delta_t2 = LaneRadarTrack[LastOKIDX][6] - LaneRadarTrack[0][6];  // ï¿½ï¿½Ò»ï¿½É¿ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½É¿ï¿½ï¿½ì¼£ï¿½ï¿½Ê±ï¿½ï¿½Ö®ï¿½ï¿½
-        double delta_t3 = LaneRadarTrack[LastOKIDX][6] - LaneRadarTrack[lastLastOKIdx][6];  // ï¿½ï¿½Ò»ï¿½É¿ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½Ç°Ç°ï¿½É¿ï¿½ï¿½ì¼£ï¿½ï¿½Ê±ï¿½ï¿½Ö®ï¿½ï¿½
+        double delta_t1 = (*(radarBegin + tmpDotIdx)).timestamp - LaneRadarTrack[LastOKIDX][6]; // µ±Ç°Ê±¼äÓëÉÏÒ»¿É¿¿¹ì¼£µãµÄÊ±¼äÖ®²î
+        double delta_t2 = LaneRadarTrack[LastOKIDX][6] - LaneRadarTrack[0][6];  // ÉÏÒ»¿É¿¿¹ì¼£µãÓëµÚÒ»¸ö¿É¿¿¹ì¼£µãÊ±¼äÖ®²î
+        double delta_t3 = LaneRadarTrack[LastOKIDX][6] - LaneRadarTrack[lastLastOKIdx][6];  // ÉÏÒ»¿É¿¿¹ì¼£µãÓëÇ°Ç°¿É¿¿¹ì¼£µãÊ±¼äÖ®²î
 
         double delta_x_his = (LaneRadarTrack[LastOKIDX][0] - LaneRadarTrack[0][0]) / delta_t2 * delta_t1;
         double delta_y_his = (LaneRadarTrack[LastOKIDX][1] - LaneRadarTrack[0][1]) / delta_t2 * delta_t1;
@@ -680,34 +680,25 @@ void predict_lot(int LastOKIDX, int tmpDotIdx, vector<Radar>::iterator radarBegi
     }
 }
 
-// Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½xï¿½ï¿½yï¿½ï¿½zï¿½ï¿½ï¿½ê£¬ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½Ù¶È£ï¿½Í³Ò»Ä¬ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ï¿½ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É½ï¿½ï¿½ÜµÄ·ï¿½Î§ï¿½Ú£ï¿½ï¿½ï¿½Ä¬ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò£¬´ï¿½Ê±alpha=1ï¿½ï¿½
+// Í¨¹ý³µÁ¾µ±Ç°µÄx£¬y£¬z×ø±ê£¬ÒÔ¼°¾¶ÏòËÙ¶È£¬¼ÆËãÆäÊµ¼ÊËÙ¶È£¨Í³Ò»Ä¬ÈÏ³µÁ¾ÑØ×Å³µµÀÐÐÊ»£¬ÔÚÎó²î¿É½ÓÊÜµÄ·¶Î§ÄÚ£¬ÈôÄ¬ÈÏ³µµÀ·½Ïò¾ÍÊÇxÖáÕýÏò·½Ïò£¬´ËÊ±alpha=1£©
 double v_true_cal(double x, double y, double z, double v_r, double alpha) {
-    double cosTheta;
-    if(x<0){
-        cosTheta = x*-1.0 / sqrt(x*x + y*y + z*z);
-    }else{
-        cosTheta = x / sqrt(x*x + y*y + z*z); // ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï£¬xï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½0
-    }
-    
-    // double temp=sqrt(x*x + y*y + z*z);
-    double curx=std::abs(x);
-    // size_t len=sizeof(long int);
+    double cosTheta = abs(x) / sqrt(x*x + y*y + z*z); // ÔÚÀ×´ïÊý¾ÝÀï£¬x±ØÈ»´óÓÚ0
     double v = (v_r / cosTheta) / alpha;
     return v;
 }
 
-// ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½â¾¶ï¿½ï¿½ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã½Ó½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½
+// ¸Ã²¿·ÖÓÃÓÚ¼ì²â¾¶ÏòËÙ¶ÈÏà½üÇÒÎ»ÖÃ½Ó½üµÄÀ×´ïÊý¾Ý
 void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector<int>& radarFrameTimeIdx, const vector<int>& Lane2FrameIdx, int DotIdx, int n_Frame, const vector<int>& idx, double& radar_x, double& radar_y, const vector<vector<double>>& LaneRadarTrack, int LastOKIDX, double& sp_mean) {
     
-    // ***********************************ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½***********************************
+    // ***********************************¿¨¶ûÂüÂË²¨Æ÷³õÊ¼»¯***********************************
     double deltat = 1;
-    static vector<vector<double>> A = { {1, deltat}, {0, 1} };   // ×´Ì¬×ªï¿½Æ¾ï¿½ï¿½ï¿½ï¿½ï¿½Ò»Ê±ï¿½Ìµï¿½×´Ì¬×ªï¿½Æµï¿½ï¿½ï¿½Ç°Ê±ï¿½ï¿½
-    static vector<vector<double>> Q = { {0.5, 0}, {0, 0.01} };   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½ï¿½p(w)~N(0, Q)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ²ï¿½È·ï¿½ï¿½ï¿½ï¿½
-    static vector<vector<double>> R = { {4, 0}, {0, 0.04} };     // ï¿½Û²ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½p(v)~N(0, R)
-    static vector<vector<double>> H = { {1, 0}, {0, 1} };        // ×´Ì¬ï¿½Û²ï¿½ï¿½ï¿½ï¿½
-    static vector<vector<double>> P = { {4, 0}, {0, 0.04} };     // ×´Ì¬ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½P 
-    static vector<vector<double>> P_posterior = { {4, 0}, {0, 0.04} };   // ×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    static vector<vector<double>> eyeMatrix = { {1.0, 0}, {0, 1.0} };  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½   
+    static vector<vector<double>> A = { {1, deltat}, {0, 1} };   // ×´Ì¬×ªÒÆ¾ØÕó£¬ÉÏÒ»Ê±¿ÌµÄ×´Ì¬×ªÒÆµ½µ±Ç°Ê±¿Ì
+    static vector<vector<double>> Q = { {0.5, 0}, {0, 0.01} };   // ¹ý³ÌÔëÉùÐ­·½²î¾ØÕóQ£¬p(w)~N(0, Q)£¬ÔëÉùÀ´×ÔÕæÊµÊÀ½çÖÐµÄ²»È·¶¨ÐÔ
+    static vector<vector<double>> R = { {4, 0}, {0, 0.04} };     // ¹Û²âÔëÉùÐ­·½²î¾ØÕóR£¬p(v)~N(0, R)
+    static vector<vector<double>> H = { {1, 0}, {0, 1} };        // ×´Ì¬¹Û²â¾ØÕó
+    static vector<vector<double>> P = { {4, 0}, {0, 0.04} };     // ×´Ì¬¹À¼ÆÐ­·½²î¾ØÕóP 
+    static vector<vector<double>> P_posterior = { {4, 0}, {0, 0.04} };   // ×´Ì¬ºóÑé¹À¼ÆÐ­·½²î¾ØÕó
+    static vector<vector<double>> eyeMatrix = { {1.0, 0}, {0, 1.0} };  // ´´½¨µ¥Î»¾ØÕó   
     
     int tmp_cnt = 1, tmpDotIdx1 = 0;
     double sum_radar_x = radar_x, sum_radar_y = radar_y;
@@ -720,7 +711,7 @@ void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector
     else
         return;
     ++tmp_cnt;
-    while (j < n_Frame - 1 && std::abs(sp_last - RadarData[tmpDotIdx1].VeloRadial) < 0.001) {
+    while (j < n_Frame - 1 && abs(sp_last - RadarData[tmpDotIdx1].VeloRadial) < 0.001) {
         if ((RadarData[tmpDotIdx1].DistLong - radar_x)*(RadarData[tmpDotIdx1].DistLong - radar_x) + 
             (RadarData[tmpDotIdx1].DistLat - radar_y) * (RadarData[tmpDotIdx1].DistLat - radar_y) < 25) {
 
@@ -739,35 +730,35 @@ void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector
 
     if (LastOKIDX > 0) {
         sp_mean = speedSum / (tmp_cnt - 1);
-        // ----------------------ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½---------------------
+        // ----------------------½øÐÐÏÈÑé¹À¼Æ---------------------
         double deltaT = RadarData[DotIdx].timestamp - LaneRadarTrack[LastOKIDX][6];
         A = { {1, deltaT}, {0, 1} };
         double carDisLog = LaneRadarTrack[LastOKIDX][0];
         double carSpeed = LaneRadarTrack[LastOKIDX][8];
         vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
         vector<vector<double>>X_prior = matrixMultiply(A, X_last);
-        // -----------------ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½P----------------
+        // -----------------¼ÆËã×´Ì¬¹À¼ÆÐ­·½²î¾ØÕóP----------------
         vector<vector<double>> A_transpose = transposeMatrix(A);
         vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
         vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
         vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
-        // ----------------------ï¿½ï¿½ï¿½ã¿¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-------------------
-        R = { {9.0, 0.0}, {0.0, 0.0} };    // ï¿½Û²ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½p(v)~N(0,R)
+        // ----------------------¼ÆËã¿¨¶ûÂüÔöÒæ-------------------
+        R = { {9.0, 0.0}, {0.0, 0.0} };    // ¹Û²âÔëÉùÐ­·½²î¾ØÕóR£¬p(v)~N(0,R)
         vector<vector<double>> H_transpose = transposeMatrix(H);
         vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
         vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
         vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
-        // ------------------------ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-----------------------
+        // ------------------------ºóÑé¹À¼Æ-----------------------
         vector<vector<double>> Z_measure = { {radar_x}, {sp_mean} };
         vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
         radar_x = X_posterior[0][0];
         sp_mean = X_posterior[1][0];
-        // --------------- ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½P-----------------
+        // --------------- ¸üÐÂ×´Ì¬¹À¼ÆÐ­·½²î¾ØÕóP-----------------
         P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
     }
 }
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LaneRadarTrack_x, LaneRadarTrack1_yÎªy = kx + bï¿½ï¿½ï¿½ï¿½Ê½
+// ÀûÓÃ×îÐ¡¶þ³Ë·¨£¬ÄâºÏÊý¾ÝLaneRadarTrack_x, LaneRadarTrack1_yÎªy = kx + bµÄÐÎÊ½
 void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& LaneRadarTrack_y, double& k, double& b) {
     int num_point = LaneRadarTrack_x.size();
     double sum_x = 0.0, sum_y = 0.0, sum_x2 = 0.0, sum_xy = 0.0;
@@ -778,7 +769,7 @@ void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& L
         sum_xy += LaneRadarTrack_x[i] * LaneRadarTrack_y[i];
     }
     double denominator = num_point * sum_x2 - sum_x * sum_x;
-    if (std::abs(denominator) > 0.00000001) {
+    if (abs(denominator) > 0.00000001) {
         k = (num_point * sum_xy - sum_x * sum_y) / denominator;
         b = (sum_x2 * sum_y - sum_x * sum_xy) / denominator;
     }
@@ -788,11 +779,11 @@ void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& L
     }
 }
 
-// Í¨ï¿½ï¿½ï¿½ê¶¨ï¿½ï¿½ï¿½Ý£ï¿½È·ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½Ô­ï¿½ï¿½Ä¾ï¿½Î³ï¿½ï¿½
+// Í¨¹ý±ê¶¨Êý¾Ý£¬È·¶¨À×´ï×ø±êÏµµÄÔ­µãµÄ¾­Î³¶È
 void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3) {
-    double R = 6371393.0;   // ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ë¾¶
-    double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú¾ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½Ô½ï¿½Ä¶ï¿½ï¿½ï¿½
-    double latitude_gap_per_meter = 360 / (2 * PI * R); // ï¿½Ï±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Î³ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½
+    double R = 6371393.0;   // µØÇòÆ½¾ù°ë¾¶
+    double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // ¶«Î÷·½ÏòµÄÒ»Ã×ÔÚ¾­¶ÈÉÏ¿çÔ½µÄ¶ÈÊý
+    double latitude_gap_per_meter = 360 / (2 * PI * R); // ÄÏ±±·½ÏòµÄÒ»Ã×ÔÚÎ³¶ÈÉÏ¿çÓòµÄ¶ÈÊý
     int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
     double ori_coordinateLong = 0.0, ori_coordinateLat = 0.0;
     for (int i = 0; i < nLane1; ++i) {
@@ -817,40 +808,40 @@ void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double th
     ori_latitude = ori_coordinateLat / (nLane1 + nLane2 + nLane3);
 }
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ßµÄ½Ø¾ï¿½
+// Çó³öÁ½Ìõ½çÏÞÖ±ÏßµÄ½Ø¾à
 extern void get_intercept(double k, double b1, double b3, double& b_left, double& b_right) {
     double b = b1;
-    double lineGap1 = 1.8 + 0; // ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    double lineGap2 = 12.6 + 0;    // ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    double lineGap1 = 1.8 + 0; // ¼ÙÉèµÚÒ»³µµÀµÄÖÐÑëÓë×ó²àÂ·»ù¾àÀë
+    double lineGap2 = 12.6 + 0;    // ¼ÙÉèµÚÒ»³µµÀµÄÖÐÑëÓëÓÒ²àÂ·»ù¾àÀë
 
     double b_left_tmp1 = b + lineGap1 * sqrt(1 + k*k);
     double b_left_tmp2 = b - lineGap1 * sqrt(1 + k*k);
-    if (std::abs(b_left_tmp1 - b3) > std::abs(b_left_tmp2 - b3))
+    if (abs(b_left_tmp1 - b3) > abs(b_left_tmp2 - b3))
         b_left = b_left_tmp1;
     else
         b_left = b_left_tmp2;
 
     double b_right_tmp1 = b + lineGap2 * sqrt(1 + k*k);
     double b_right_tmp2 = b - lineGap2 * sqrt(1 + k*k);
-    if (std::abs(b_right_tmp1 - b1) > std::abs(b_right_tmp2 - b1))
+    if (abs(b_right_tmp1 - b1) > abs(b_right_tmp2 - b1))
         b_right = b_right_tmp1;
     else
         b_right = b_right_tmp2;
 }
 
-// ï¿½ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
+// ÉèÖÃÍ¬Ò»Á¾³µµÄÔÚÇ°ºóÖ¡µÄÔÚ³µµÀÉÏµÄ×î´ó×ÝÏò¾àÀëÆ«²îºÍ×î´óºáÏò¾àÀëÆ«²î
 void getMaxVarX_MaxVarY(double maxCarX, double maxCarY, double theta2, double& maxVarX, double& maxVarY) {
     double theta = atan(maxCarY / maxCarX);
     double maxCarLen = sqrt(maxCarX * maxCarX + maxCarY * maxCarY);
-    maxVarX = std::abs(maxCarLen * cos(theta2 - theta));
-    if (maxVarX < std::abs(maxCarLen* cos(theta2 + theta)))
-        maxVarX = std::abs(maxCarLen* cos(theta2 + theta));
-    maxVarY = std::abs(maxCarLen * sin(theta2 - theta));
-    if (maxVarY < std::abs(maxCarLen* sin(theta2 + theta)))
-        maxVarY = std::abs(maxCarLen* sin(theta2 + theta));
+    maxVarX = abs(maxCarLen * cos(theta2 - theta));
+    if (maxVarX < abs(maxCarLen* cos(theta2 + theta)))
+        maxVarX = abs(maxCarLen* cos(theta2 + theta));
+    maxVarY = abs(maxCarLen * sin(theta2 - theta));
+    if (maxVarY < abs(maxCarLen* sin(theta2 + theta)))
+        maxVarY = abs(maxCarLen* sin(theta2 + theta));
 }
 
-// ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// ¼ì²éÖ¸¶¨µãÊÇ·ñÎ»ÓÚÇøÓòÄÚ
 bool check_in_zone(double k, double b_left, double b_right, double x, double y) {
     double b_tmp;
     if (b_left < b_right) {
@@ -858,13 +849,13 @@ bool check_in_zone(double k, double b_left, double b_right, double x, double y) 
         b_left = b_right;
         b_right = b_tmp;
     }
-    if (k * x + b_left > y && k * x + b_right < y) // ï¿½Ú½ï¿½ï¿½ï¿½
+    if (k * x + b_left > y && k * x + b_right < y) // ÔÚ½çÄÚ
         return true;
-    else    // ï¿½Ú½ï¿½ï¿½ï¿½
+    else    // ÔÚ½çÍâ
         return false;
 }
 
-// Ö´ï¿½Ð¾ï¿½ï¿½ï¿½Ë·ï¿½ï¿½Äºï¿½ï¿½ï¿½
+// Ö´ÐÐ¾ØÕó³Ë·¨µÄº¯Êý
 vector<vector<double>> matrixMultiply(const vector<vector<double>>& A, const vector<vector<double>>& B) {
     vector<vector<double>> C(A.size(), vector<double>(B[0].size(), 0.0));
     for (size_t i = 0; i < A.size(); ++i)
@@ -874,13 +865,13 @@ vector<vector<double>> matrixMultiply(const vector<vector<double>>& A, const vec
     return C;
 }
 
-// Ö´ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½
+// Ö´ÐÐ¾ØÕóÇóÄæµÄº¯Êý
 vector<vector<double>> matrixInverse(const vector<vector<double>>& A) {
 
-    // ï¿½ï¿½ï¿½ï¿½Î¬ï¿½ï¿½
+    // ÉèÖÃÎ¬¶È
     size_t n = A.size();
 
-    // ï¿½Ãµï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¾ï¿½ï¿½ï¿½
+    // ÓÃµ¥Î»¾ØÕóÀ´Ôö¹ã¸Ã¾ØÕó
     vector<vector<double>> augmentedMatrix(n, vector<double>(2 * n, 0.0));
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = 0; j < n; ++j) {
@@ -889,7 +880,7 @@ vector<vector<double>> matrixInverse(const vector<vector<double>>& A) {
         }
     }
 
-    // ï¿½ï¿½Ë¹ï¿½ï¿½Ôªï¿½ï¿½
+    // ¸ßË¹ÏûÔª·¨
     for (size_t i = 0; i < n; ++i) {
         // Make the diagonal contain 1
         double diagonal = augmentedMatrix[i][i];
@@ -897,7 +888,7 @@ vector<vector<double>> matrixInverse(const vector<vector<double>>& A) {
             augmentedMatrix[i][j] /= diagonal;
         }
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ð±ï¿½Îª0
+        // ÈÃÆäÓàÐÐÔÚÕâÒ»ÁÐ±äÎª0
         for (size_t k = 0; k < n; ++k) {
             if (k != i) {
                 double factor = augmentedMatrix[k][i];
@@ -908,7 +899,7 @@ vector<vector<double>> matrixInverse(const vector<vector<double>>& A) {
         }
     }
 
-    // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // È¡³öÄæ¾ØÕó
     vector<vector<double>> A_inverse(n, vector<double>(n, 0.0));
     for (size_t i = 0; i < n; ++i)
         for (size_t j = 0; j < n; ++j)
@@ -917,7 +908,7 @@ vector<vector<double>> matrixInverse(const vector<vector<double>>& A) {
 
 }
 
-// Ö´ï¿½Ð¾ï¿½ï¿½ï¿½×ªï¿½ÃµÄºï¿½ï¿½ï¿½
+// Ö´ÐÐ¾ØÕó×ªÖÃµÄº¯Êý
 vector<vector<double>> transposeMatrix(const vector<vector<double>>& A) {
     size_t rows = A.size();
     size_t cols = A[0].size();
@@ -931,7 +922,7 @@ vector<vector<double>> transposeMatrix(const vector<vector<double>>& A) {
     return transpose;
 }
 
-// Ö´ï¿½Ð¾ï¿½ï¿½ï¿½Ó·ï¿½ï¿½Äºï¿½ï¿½ï¿½
+// Ö´ÐÐ¾ØÕó¼Ó·¨µÄº¯Êý
 vector<vector<double>> matrixAddition(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 
     size_t rows = A.size();
@@ -943,7 +934,7 @@ vector<vector<double>> matrixAddition(const vector<vector<double>>& A, const vec
     return result;
 }
 
-// Ö´ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½
+// Ö´ÐÐ¾ØÕó¼õ·¨µÄº¯Êý
 vector<vector<double>> matrixSubtraction(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 
     size_t rows = A.size();
@@ -955,7 +946,7 @@ vector<vector<double>> matrixSubtraction(const vector<vector<double>>& A, const 
     return result;
 }
 
-// Ö´ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½Ó¦ï¿½ï¿½ï¿½Ï¸ï¿½Öµï¿½Äºï¿½ï¿½ï¿½
+// Ö´ÐÐ¾ØÕóÔÚ¶ÔÓ¦ÐÐÉÏ¸³ÖµµÄº¯Êý
 void setRows(vector<vector<double>>& tracer_Pbuffer, const vector<vector<double>>& P_posterior, int start_row) {
     int rows_to_copy = P_posterior.size();
     for (int i = 0; i < rows_to_copy; ++i) {
