@@ -42,15 +42,15 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
         double UNIX_time = GPST2UNIX(weeks, second_in_weeks);
         while (startGapIdx < n_Gap - 1) {
             if (UNIX_time >= radarFrameTime[startGapIdx] && UNIX_time <= radarFrameTime[startGapIdx+1]) { // 闭区间，以覆盖整个区域
-                if (abs(radarFrameTime[startGapIdx] - UNIX_time) < abs(radarFrameTime[startGapIdx+1] - UNIX_time)) {
+                if (std::abs(radarFrameTime[startGapIdx] - UNIX_time) < std::abs(radarFrameTime[startGapIdx+1] - UNIX_time)) {
                     Lane2RadarFrame[i] = radarFrameTimeIdx[startGapIdx];
                     Lane2FrameIdx[i] = startGapIdx;
-                    Lane2FrameErr[i] = abs(radarFrameTime[startGapIdx] - UNIX_time);
+                    Lane2FrameErr[i] = std::abs(radarFrameTime[startGapIdx] - UNIX_time);
                 }
                 else {
                     Lane2RadarFrame[i] = radarFrameTimeIdx[startGapIdx+1];
                     Lane2FrameIdx[i] = startGapIdx + 1;
-                    Lane2FrameErr[i] = abs(radarFrameTime[startGapIdx+1] - UNIX_time);
+                    Lane2FrameErr[i] = std::abs(radarFrameTime[startGapIdx+1] - UNIX_time);
                 }
                 if (i > 0 && (Lane2FrameIdx[i] != Lane2FrameIdx[i-1]))
                     ++n_map;
@@ -88,7 +88,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
         int n_Frame = radarFrameCnt[Lane2FrameIdx[i]], DotIdx = 0;
         vector<double> sp_gap(n_Frame, 0);
         for (int j = 0; j < n_Frame; ++j) {
-            sp_gap[j] = abs(Lane_sp[i] - RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]] + j].VeloRadial);
+            sp_gap[j] = std::abs(Lane_sp[i] - RadarData[radarFrameTimeIdx[Lane2FrameIdx[i]] + j].VeloRadial);
         }
         vector<int> idx(n_Frame);   std::iota(idx.begin(), idx.end(), 0);
         std::sort(idx.begin(), idx.end(), [&sp_gap](int a, int b) {
@@ -106,7 +106,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             if (sp_gap[idx[j]] > 1) // 速度差距过大，提前结束这一检验
                 break;
             if (j < n_Frame - 1) {
-                if (abs(sp_gap[idx[j]] - sp_gap[idx[j + 1]]) < 0.01) {
+                if (std::abs(sp_gap[idx[j]] - sp_gap[idx[j + 1]]) < 0.01) {
                     int tmpDotIdx = radarFrameTimeIdx[Lane2FrameIdx[i]] + idx[j];
 
                     predict_lot(LastOKIDX, tmpDotIdx, RadarData.begin(), LaneRadarTrack, lastLastOKIdx, predict_x, predict_y);
@@ -398,18 +398,18 @@ void Solution::run() {
                 if (BlockIndex[j]) {
                     ++j; continue;
                 }
-                if (abs(carSpeed - curFrameData[sortedIdx[j]].VeloRadial) / cosTheta2 > deltaT * carA) { // (deltaT在0.025~0.2之间)
+                if (std::abs(carSpeed - curFrameData[sortedIdx[j]].VeloRadial) / cosTheta2 > deltaT * carA) { // (deltaT在0.025~0.2之间)
                     ++j; continue;
                 }
-                if (abs(carDisLat - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
+                if (std::abs(carDisLat - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
                     ++j; continue;
                 }
-                if (abs(carRCS - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
+                if (std::abs(carRCS - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
                     ++j; continue;
                 }
                 double v_true = v_true_cal(carDisLog, carDisLat, RadarHeight, carSpeed, cosTheta2); // 计算车辆的实际速度，默认车辆沿着车道方向行驶
                 double X_predict = carDisLog + deltaT * v_true * cosTheta2;    // 车辆的预测纵向位置
-                if (abs(curFrameData[sortedIdx[j]].DistLong - X_predict) > maxVarX) {
+                if (std::abs(curFrameData[sortedIdx[j]].DistLong - X_predict) > maxVarX) {
                     ++j; continue;
                 }
 
@@ -427,16 +427,16 @@ void Solution::run() {
                     if (BlockIndex[j]) {
                         ++j; continue;
                     }
-                    if (abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
+                    if (std::abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
                         ++j; continue;
                     }
-                    if (abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
+                    if (std::abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
                         ++j; continue;
                     }
-                    if (abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
+                    if (std::abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
                         ++j; continue;
                     }
-                    if (abs(RCS_mean - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
+                    if (std::abs(RCS_mean - curFrameData[sortedIdx[j]].RCS) > maxVarRCS) {
                         ++j; continue;
                     }
                     if (curFrameData[sortedIdx[j]].DistLong < Xmin)
@@ -551,13 +551,13 @@ void Solution::run() {
                 if (BlockIndex[j]) {
                     ++j; continue;
                 }
-                if (abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
+                if (std::abs(X_mean - curFrameData[sortedIdx[j]].DistLong) > maxVarX) {
                     ++j; continue;
                 }
-                if (abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
+                if (std::abs(Y_mean - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
                     ++j; continue;
                 }
-                if (abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
+                if (std::abs(sp_mean - curFrameData[sortedIdx[j]].VeloRadial) > carSpeedVar) {
                     ++j; continue;
                 }
                 if (curFrameData[sortedIdx[j]].DistLong < Xmin) {
@@ -604,12 +604,12 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
     all_res[data_idx].Object_DistLat = Y_mean;
     double sp_true = v_true_cal(X_mean, Y_mean, RadarHeight, sp_mean, cosTheta2);
     all_res[data_idx].Object_VeloLong = sp_true * cosTheta2;
-    if (abs(Y_mean - carLat) < 0.0001)
+    if (std::abs(Y_mean - carLat) < 0.0001)
         all_res[data_idx].Object_VeloLat = 0;
     else if (Y_mean > carLat)
-        all_res[data_idx].Object_VeloLat = abs(sp_true * sinTheta2);
+        all_res[data_idx].Object_VeloLat = std::abs(sp_true * sinTheta2);
     else
-        all_res[data_idx].Object_VeloLat = -abs(sp_true * sinTheta2);
+        all_res[data_idx].Object_VeloLat = -std::abs(sp_true * sinTheta2);
 
     all_res[data_idx].Object_RCS = RCS_mean;
     if (maxCarLen < 7.5)
@@ -621,7 +621,7 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
     all_res[data_idx].Object_Latitude = latitude;
     all_res[data_idx].Object_Longitude = longitude;
     all_res[data_idx].Object_Altitude = kAti * X_mean + bAti;
-    if (abs(sp_true) == 0)
+    if (std::abs(sp_true) == 0)
         all_res[data_idx].Object_parking = 1;
     else
         all_res[data_idx].Object_parking = 0;
@@ -629,7 +629,7 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
         all_res[data_idx].Object_retrograde = 1;
     else
         all_res[data_idx].Object_retrograde = 0;
-    if (abs(sp_true) > 16.6667)
+    if (std::abs(sp_true) > 16.6667)
         all_res[data_idx].Object_overspeed = 1;
     else
         all_res[data_idx].Object_overspeed = 0;
@@ -682,7 +682,7 @@ void predict_lot(int LastOKIDX, int tmpDotIdx, vector<Radar>::iterator radarBegi
 
 // 通过车辆当前的x，y，z坐标，以及径向速度，计算其实际速度（统一默认车辆沿着车道行驶，在误差可接受的范围内，若默认车道方向就是x轴正向方向，此时alpha=1）
 double v_true_cal(double x, double y, double z, double v_r, double alpha) {
-    double cosTheta = abs(x) / sqrt(x*x + y*y + z*z); // 在雷达数据里，x必然大于0
+    double cosTheta = std::abs(x) / sqrt(x*x + y*y + z*z); // 在雷达数据里，x必然大于0
     double v = (v_r / cosTheta) / alpha;
     return v;
 }
@@ -711,7 +711,7 @@ void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector
     else
         return;
     ++tmp_cnt;
-    while (j < n_Frame - 1 && abs(sp_last - RadarData[tmpDotIdx1].VeloRadial) < 0.001) {
+    while (j < n_Frame - 1 && std::abs(sp_last - RadarData[tmpDotIdx1].VeloRadial) < 0.001) {
         if ((RadarData[tmpDotIdx1].DistLong - radar_x)*(RadarData[tmpDotIdx1].DistLong - radar_x) + 
             (RadarData[tmpDotIdx1].DistLat - radar_y) * (RadarData[tmpDotIdx1].DistLat - radar_y) < 25) {
 
@@ -769,7 +769,7 @@ void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& L
         sum_xy += LaneRadarTrack_x[i] * LaneRadarTrack_y[i];
     }
     double denominator = num_point * sum_x2 - sum_x * sum_x;
-    if (abs(denominator) > 0.00000001) {
+    if (std::abs(denominator) > 0.00000001) {
         k = (num_point * sum_xy - sum_x * sum_y) / denominator;
         b = (sum_x2 * sum_y - sum_x * sum_xy) / denominator;
     }
@@ -816,14 +816,14 @@ extern void get_intercept(double k, double b1, double b3, double& b_left, double
 
     double b_left_tmp1 = b + lineGap1 * sqrt(1 + k*k);
     double b_left_tmp2 = b - lineGap1 * sqrt(1 + k*k);
-    if (abs(b_left_tmp1 - b3) > abs(b_left_tmp2 - b3))
+    if (std::abs(b_left_tmp1 - b3) > std::abs(b_left_tmp2 - b3))
         b_left = b_left_tmp1;
     else
         b_left = b_left_tmp2;
 
     double b_right_tmp1 = b + lineGap2 * sqrt(1 + k*k);
     double b_right_tmp2 = b - lineGap2 * sqrt(1 + k*k);
-    if (abs(b_right_tmp1 - b1) > abs(b_right_tmp2 - b1))
+    if (std::abs(b_right_tmp1 - b1) > std::abs(b_right_tmp2 - b1))
         b_right = b_right_tmp1;
     else
         b_right = b_right_tmp2;
@@ -833,12 +833,12 @@ extern void get_intercept(double k, double b1, double b3, double& b_left, double
 void getMaxVarX_MaxVarY(double maxCarX, double maxCarY, double theta2, double& maxVarX, double& maxVarY) {
     double theta = atan(maxCarY / maxCarX);
     double maxCarLen = sqrt(maxCarX * maxCarX + maxCarY * maxCarY);
-    maxVarX = abs(maxCarLen * cos(theta2 - theta));
-    if (maxVarX < abs(maxCarLen* cos(theta2 + theta)))
-        maxVarX = abs(maxCarLen* cos(theta2 + theta));
-    maxVarY = abs(maxCarLen * sin(theta2 - theta));
-    if (maxVarY < abs(maxCarLen* sin(theta2 + theta)))
-        maxVarY = abs(maxCarLen* sin(theta2 + theta));
+    maxVarX = std::abs(maxCarLen * cos(theta2 - theta));
+    if (maxVarX < std::abs(maxCarLen* cos(theta2 + theta)))
+        maxVarX = std::abs(maxCarLen* cos(theta2 + theta));
+    maxVarY = std::abs(maxCarLen * sin(theta2 - theta));
+    if (maxVarY < std::abs(maxCarLen* sin(theta2 + theta)))
+        maxVarY = std::abs(maxCarLen* sin(theta2 + theta));
 }
 
 // 检查指定点是否位于区域内
