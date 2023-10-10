@@ -8,9 +8,9 @@
 
 void rtk::readRtk(const char* rtkPath, std::vector<rtk>& rtkline) {
     rtkline.reserve(11000);
-    std::ifstream inputFile(rtkPath); // ´ò¿ªÒ»¸öÎÄ¼şÁ÷²¢Ö¸¶¨ÎÄ¼şÃû
+    std::ifstream inputFile(rtkPath); // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
     std::string line;
-    while (std::getline(inputFile, line)) { // ÖğĞĞ¶ÁÈ¡ÎÄ¼şÄÚÈİ
+    while (std::getline(inputFile, line)) { // ï¿½ï¿½ï¿½Ğ¶ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
         if (line[1] == 'B')
             continue;
         rtk data;
@@ -42,19 +42,19 @@ void rtk::readRtk(const char* rtkPath, std::vector<rtk>& rtkline) {
         index++;
         rtkline.push_back(data);
     }
-    inputFile.close(); // ¹Ø±ÕÎÄ¼şÁ÷
+    inputFile.close(); // ï¿½Ø±ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
 }
 
 int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& RadarData) {
-    RadarData.reserve(3000000);
-    std::ifstream inputFile(RadarDataPath); // ´ò¿ªÒ»¸öÎÄ¼şÁ÷²¢Ö¸¶¨ÎÄ¼şÃû
+    // RadarData.reserve(3000000);
+    std::ifstream inputFile(RadarDataPath); // ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
 
     int frameCnt = 0;
     double lastTimeStamp = -1.0;
 
     std::string line;
     std::getline(inputFile, line);
-    while (std::getline(inputFile, line)) { // ÖğĞĞ¶ÁÈ¡ÎÄ¼şÄÚÈİ
+    while (std::getline(inputFile, line)) { // ï¿½ï¿½ï¿½Ğ¶ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
         Radar data;
         int index = 0;
         data.timestamp = str2double(line, index);
@@ -79,15 +79,17 @@ int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& R
         index++;
         data.RCS = str2double(buff);
         RadarData.push_back(data);
+        // std::cout<<line<<std::endl;
+        // data.print();
     }
     inputFile.close();
     return frameCnt;
 }
 
 void res::writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<int>& carID_buffer) {
-    std::ofstream outFile; // ´´½¨Ò»¸öÊä³öÎÄ¼şÁ÷¶ÔÏó
+    std::ofstream outFile; // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     int cnt = 0;
-    // ´ò¿ªÎÄ¼ş£¬Èç¹ûÎÄ¼ş²»´æÔÚÔò´´½¨
+    // ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò´´½ï¿½
     outFile.open(Path);
     for (auto& re : Result) {
         if (re.Timestamp == 0)
@@ -110,6 +112,6 @@ void res::writeResult(const std::string& Path, std::vector<res>& Result, const s
         outFile << re.Object_overspeed;
         outFile << "\n";
     }
-    // ¹Ø±ÕÎÄ¼şÁ÷
+    // ï¿½Ø±ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
     outFile.close();
 }
