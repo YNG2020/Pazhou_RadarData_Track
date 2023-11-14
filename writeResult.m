@@ -28,7 +28,7 @@ function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     else
         res(12) = 0;
     end
-    if sp_true < 0
+    if sp_true > 0
         res(13) = 1;
     else
         res(13) = 0;
