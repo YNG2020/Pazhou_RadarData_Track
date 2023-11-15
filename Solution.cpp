@@ -78,7 +78,7 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
 
     vector<double> Lane_sp(n_Lane, 0);
     for (int i = 0; i < n_Lane; ++i)
-        Lane_sp[i] = sqrt((*(begin + i)).EastVelocity * (*(begin + i)).EastVelocity + (*(begin + i)).NorthVelocity * (*(begin + i)).NorthVelocity);
+        Lane_sp[i] = dirLaneFlag * sqrt((*(begin + i)).EastVelocity * (*(begin + i)).EastVelocity + (*(begin + i)).NorthVelocity * (*(begin + i)).NorthVelocity);
     vector<vector<double>> LaneRadarTrack(n_map, vector<double>(9, 0));
     int LastOKIDX = 0, lastLastOKIdx = 0, cnt = 0;
 
@@ -135,6 +135,8 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
             DotIdx = radarFrameTimeIdx[Lane2FrameIdx[i]] + idx[0];
             predict_lot(LastOKIDX, DotIdx, RadarData.begin(), LaneRadarTrack, lastLastOKIdx, predict_x, predict_y);
             // 该部分用于检测径向速度相近且位置接近的雷达数据
+            radar_x = RadarData[DotIdx].DistLong;
+            radar_y = RadarData[DotIdx].DistLat;
             find_relate_data(i, 0, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, radar_x, radar_y, LaneRadarTrack, LastOKIDX, sp_mean);
             LastOKIDX = cnt;
             OKFLAG = 1;
@@ -208,80 +210,92 @@ vector<vector<double>> Solution::mapLane2Radar(vector<rtk>::iterator begin, vect
 
 // 初始化程序
 void Solution::init() {
-    //rtk::readRtk("./data/Lane1_rtk.dat", rtkLine1);
-    //rtk::readRtk("./data/Lane2_rtk.dat", rtkLine2);
-    //rtk::readRtk("./data/Lane3_rtk.dat", rtkLine3);
-    //n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
-    //vector<vector<double>> LaneRadarTrack1 = mapLane2Radar(rtkLine1.begin(), rtkLine1.end());
-    //vector<vector<double>> LaneRadarTrack2 = mapLane2Radar(rtkLine2.begin(), rtkLine2.end());
-    //vector<vector<double>> LaneRadarTrack3 = mapLane2Radar(rtkLine3.begin(), rtkLine3.end());
-    //double k1 = 0.0, k2 = 0.0, k3 = 0.0, b1 = 0.0, b2 = 0.0, b3 = 0.0, arcTan = 0.0;
-    //int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
-    //vector<double> LaneRadarTrackX1(nLane1);
-    //vector<double> LaneRadarTrackY1(nLane1);
-    //vector<double> LaneRadarTrackAti1(nLane1);
-    //vector<double> LaneRadarTrackX2(nLane2);
-    //vector<double> LaneRadarTrackY2(nLane2);
-    //vector<double> LaneRadarTrackAti2(nLane2);
-    //vector<double> LaneRadarTrackX3(nLane3);
-    //vector<double> LaneRadarTrackY3(nLane3);
-    //vector<double> LaneRadarTrackAti3(nLane3);
-    //for (int i = 0; i < nLane1; ++i) {
-    //    LaneRadarTrackX1[i] = LaneRadarTrack1[i][0];
-    //    LaneRadarTrackY1[i] = LaneRadarTrack1[i][1];
-    //    LaneRadarTrackAti1[i] = LaneRadarTrack1[i][7];
-    //    arcTan += atan(LaneRadarTrack1[i][4] / LaneRadarTrack1[i][5]);
-    //    latitudeMean += LaneRadarTrack1[i][2];
-    //}
-    //for (int i = 0; i < nLane2; ++i) {
-    //    LaneRadarTrackX2[i] = LaneRadarTrack2[i][0];
-    //    LaneRadarTrackY2[i] = LaneRadarTrack2[i][1];
-    //    LaneRadarTrackAti2[i] = LaneRadarTrack2[i][7];
-    //    arcTan += atan(LaneRadarTrack2[i][4] / LaneRadarTrack2[i][5]);
-    //    latitudeMean += LaneRadarTrack2[i][2];
-    //}
-    //for (int i = 0; i < nLane3; ++i) {
-    //    LaneRadarTrackX3[i] = LaneRadarTrack3[i][0];
-    //    LaneRadarTrackY3[i] = LaneRadarTrack3[i][1];
-    //    LaneRadarTrackAti3[i] = LaneRadarTrack3[i][7];
-    //    arcTan += atan(LaneRadarTrack3[i][4] / LaneRadarTrack3[i][5]);
-    //    latitudeMean += LaneRadarTrack3[i][2];
-    //}
-    //line_plofit(LaneRadarTrackX1, LaneRadarTrackY1, k1, b1);
-    //line_plofit(LaneRadarTrackX2, LaneRadarTrackY2, k2, b2);
-    //line_plofit(LaneRadarTrackX3, LaneRadarTrackY3, k3, b3);
-    //k = (k1 + k2 + k3) / 3;  // 车道在雷达坐标系上的斜率
-    //double theta1 = arcTan / (nLane1 + nLane2 + nLane3);    // 经纬度与雷达坐标系之间的角度偏差
-    //theta2 = atan(k);    // 车道与雷达坐标系之间的角度偏差
-    //theta0 = theta1 - theta2 + 0.003121;
-    //latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // 平均纬度
-    //ori_longitude = 0.0, ori_latitude = 0.0;
-    //cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3);
-    //b_left = 0.0, b_right = 0.0;
+    //rtk::readRtk("./A_data/Lane1_rtk.dat", rtkLine1);
+    //rtk::readRtk("./A_data/Lane2_rtk.dat", rtkLine2);
+    //rtk::readRtk("./A_data/Lane3_rtk.dat", rtkLine3);
+    //n_Gap = Radar::readRadarData("./A_data/RadarData.csv", RadarData);
+    rtk::readRtk("./data/Lane1_rtk.dat", rtkLine1);
+    rtk::readRtk("./data/Lane2_rtk.dat", rtkLine2);
+    rtk::readRtk("./data/Lane3_rtk.dat", rtkLine3);
+    n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
+    double meanY = 0;
+    dirLaneFlag = check_dir(RadarData, meanY);
+    vector<vector<double>> LaneRadarTrack1 = mapLane2Radar(rtkLine1.begin(), rtkLine1.end());
+    vector<vector<double>> LaneRadarTrack2 = mapLane2Radar(rtkLine2.begin(), rtkLine2.end());
+    vector<vector<double>> LaneRadarTrack3 = mapLane2Radar(rtkLine3.begin(), rtkLine3.end());
+    double k1 = 0.0, k2 = 0.0, k3 = 0.0, b1 = 0.0, b2 = 0.0, b3 = 0.0, arcTan = 0.0;
+    int nLane1 = LaneRadarTrack1.size(), nLane2 = LaneRadarTrack2.size(), nLane3 = LaneRadarTrack3.size();
+    vector<double> LaneRadarTrackX1(nLane1);
+    vector<double> LaneRadarTrackY1(nLane1);
+    vector<double> LaneRadarTrackAti1(nLane1);
+    vector<double> LaneRadarTrackX2(nLane2);
+    vector<double> LaneRadarTrackY2(nLane2);
+    vector<double> LaneRadarTrackAti2(nLane2);
+    vector<double> LaneRadarTrackX3(nLane3);
+    vector<double> LaneRadarTrackY3(nLane3);
+    vector<double> LaneRadarTrackAti3(nLane3);
+    double allEastSpeed = 0.0;
+    for (int i = 0; i < nLane1; ++i) {
+        LaneRadarTrackX1[i] = LaneRadarTrack1[i][0];
+        LaneRadarTrackY1[i] = LaneRadarTrack1[i][1];
+        LaneRadarTrackAti1[i] = LaneRadarTrack1[i][7];
+        arcTan += atan(LaneRadarTrack1[i][4] / LaneRadarTrack1[i][5]);
+        latitudeMean += LaneRadarTrack1[i][2];
+        allEastSpeed += LaneRadarTrack1[i][5];
+    }
+    dirLane2EastFlage = allEastSpeed > 0 ? -1 : 1;
+    for (int i = 0; i < nLane2; ++i) {
+        LaneRadarTrackX2[i] = LaneRadarTrack2[i][0];
+        LaneRadarTrackY2[i] = LaneRadarTrack2[i][1];
+        LaneRadarTrackAti2[i] = LaneRadarTrack2[i][7];
+        arcTan += atan(LaneRadarTrack2[i][4] / LaneRadarTrack2[i][5]);
+        latitudeMean += LaneRadarTrack2[i][2];
+    }
+    for (int i = 0; i < nLane3; ++i) {
+        LaneRadarTrackX3[i] = LaneRadarTrack3[i][0];
+        LaneRadarTrackY3[i] = LaneRadarTrack3[i][1];
+        LaneRadarTrackAti3[i] = LaneRadarTrack3[i][7];
+        arcTan += atan(LaneRadarTrack3[i][4] / LaneRadarTrack3[i][5]);
+        latitudeMean += LaneRadarTrack3[i][2];
+    }
+    line_plofit(LaneRadarTrackX1, LaneRadarTrackY1, k1, b1);
+    line_plofit(LaneRadarTrackX2, LaneRadarTrackY2, k2, b2);
+    line_plofit(LaneRadarTrackX3, LaneRadarTrackY3, k3, b3);
+    k = (k1 + k2 + k3) / 3;  // 车道在雷达坐标系上的斜率
+    double theta1 = arcTan / (nLane1 + nLane2 + nLane3);    // 经纬度与雷达坐标系之间的角度偏差
+    theta2 = atan(k);    // 车道与雷达坐标系之间的角度偏差
+    theta0 = theta1 - theta2 + 0.003121;
+    latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // 平均纬度
+    ori_longitude = 0.0, ori_latitude = 0.0;
+    cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLane2EastFlage);
+    b_left = 0.0, b_right = 0.0;
     //get_intercept(k, b1, b3, b_left, b_right);
-    //cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
-
-    //double kAti1 = 0.0, kAti2 = 0.0, kAti3 = 0.0, bAti1 = 0.0, bAti2 = 0.0, bAti3 = 0.0;
-    //line_plofit(LaneRadarTrackX1, LaneRadarTrackAti1, kAti1, bAti1);
-    //line_plofit(LaneRadarTrackX2, LaneRadarTrackAti2, kAti2, bAti2);
-    //line_plofit(LaneRadarTrackX3, LaneRadarTrackAti3, kAti3, bAti3);
-    //kAti = (kAti1 + kAti2 + kAti3) / 3;
-    //bAti = (bAti1 + bAti2 + bAti3) / 3;
+    cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
+    b_left = meanY - 7.2;
+    b_right = meanY + 7.2;
+    double kAti1 = 0.0, kAti2 = 0.0, kAti3 = 0.0, bAti1 = 0.0, bAti2 = 0.0, bAti3 = 0.0;
+    line_plofit(LaneRadarTrackX1, LaneRadarTrackAti1, kAti1, bAti1);
+    line_plofit(LaneRadarTrackX2, LaneRadarTrackAti2, kAti2, bAti2);
+    line_plofit(LaneRadarTrackX3, LaneRadarTrackAti3, kAti3, bAti3);
+    kAti = (kAti1 + kAti2 + kAti3) / 3;
+    bAti = (bAti1 + bAti2 + bAti3) / 3;
 
     // 标定参数预先设置
-    n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
-    theta2 = 0;
-    cosTheta2 = 1;
-    sinTheta2 = 0;
-    theta0 = 0.504648618725381;
-    latitudeMean = 23.264113717225055;
-    ori_longitude = 113.5252998913331;
-    ori_latitude = 23.263563972364057;
-    b_left = 7.589836551857512;
-    b_right = -6.810346785925899;
-    k = 0;
-    kAti = 0.004225344416807;
-    bAti = 26.899624552922948;
+    //n_Gap = Radar::readRadarData("./data/RadarData.csv", RadarData);
+    //theta2 = -0.005046118396185;
+    //cosTheta2 = 0.999987268371582;
+    //sinTheta2 = -0.005046096981066;
+    //theta0 = 0.505648618725381;
+    //latitudeMean = 23.262841934043035;
+    //ori_longitude = 113.525249970317049;
+    //ori_latitude = 23.263544188509108;
+    //b_left = 5.589836551857512;
+    //b_right = -8.810346785925899;
+    //k = -0.005046161226915;
+    //kAti = 0.004225344416807;
+    //bAti = 26.899624552922948;
+    //dirLaneFlag = dirLaneFlag;
+    //dirLane2EastFlage = dirLane2EastFlage;
 }
 
 // 主算法
@@ -461,36 +475,36 @@ void Solution::run() {
                     Y_mean = carDisLat;
                 }
 
-                //// ----------------------进行先验估计---------------------
-                //A = { {1, deltaT}, {0, 1} };
-                //vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
-                //vector<vector<double>>X_prior = matrixMultiply(A, X_last);
-                //// -----------------计算状态估计协方差矩阵P----------------
-                //vector<vector<double>> A_transpose = transposeMatrix(A);
-                //vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
-                //vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
-                //vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
-                //// ----------------------计算卡尔曼增益-------------------
-                //R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // 观测噪声协方差矩阵R，p(v)~N(0,R)
-                //vector<vector<double>> H_transpose = transposeMatrix(H);
-                //vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
-                //vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
-                //vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
-                //// ------------------------后验估计-----------------------
-                //vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
-                //vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
+                // ----------------------进行先验估计---------------------
+                A = { {1, deltaT}, {0, 1} };
+                vector<vector<double>>X_last = { { carDisLog }, { carSpeed } };
+                vector<vector<double>>X_prior = matrixMultiply(A, X_last);
+                // -----------------计算状态估计协方差矩阵P----------------
+                vector<vector<double>> A_transpose = transposeMatrix(A);
+                vector<vector<double>> P_prior_tmp1 = matrixMultiply(A, P_posterior);
+                vector<vector<double>> P_prior_tmp2 = matrixMultiply(P_prior_tmp1, A_transpose);
+                vector<vector<double>> P_prior = matrixAddition(P_prior_tmp2, Q);
+                // ----------------------计算卡尔曼增益-------------------
+                R = { {std::max(maxCarLen * maxCarLen / 4.0, 9.0), 0}, {0.0, 0.0} };    // 观测噪声协方差矩阵R，p(v)~N(0,R)
+                vector<vector<double>> H_transpose = transposeMatrix(H);
+                vector<vector<double>> K_tmp1 = matrixMultiply(P_prior, H_transpose);
+                vector<vector<double>> K_tmp2 = matrixInverse(matrixAddition(matrixMultiply(matrixMultiply(H, P_prior), H_transpose), R));
+                vector<vector<double>> K = matrixMultiply(K_tmp1, K_tmp2);
+                // ------------------------后验估计-----------------------
+                vector<vector<double>> Z_measure = { {X_mean}, {sp_mean} };
+                vector<vector<double>> X_posterior = matrixAddition(X_prior, matrixMultiply(K, matrixSubtraction(Z_measure, matrixMultiply(H, X_prior))));
 
-                //if (X_posterior[0][0] < 400) {
-                //    X_mean = X_posterior[0][0];
-                //    sp_mean = X_posterior[1][0];
-                //}
-                //else {      // 如果滤波值>400，则不采用滤波值，并强行结束追踪
-                //    coupleFlag = 0;
-                //    tracer_buffer[i][2] = maxFailTime + 1;
-                //}
+                if (X_posterior[0][0] < 400) {
+                    X_mean = X_posterior[0][0];
+                    sp_mean = X_posterior[1][0];
+                }
+                else {      // 如果滤波值>400，则不采用滤波值，并强行结束追踪
+                    coupleFlag = 0;
+                    tracer_buffer[i][2] = maxFailTime + 1;
+                }
 
-                //// --------------- 更新状态估计协方差矩阵P-----------------
-                //P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
+                // --------------- 更新状态估计协方差矩阵P-----------------
+                P_posterior = matrixMultiply(matrixSubtraction(eyeMatrix, matrixMultiply(K, H)), P_prior);
 
                 maxCarsLen[data_idx] = maxCarLen;
                 ++carID_buffer[carID];
@@ -625,7 +639,7 @@ void Solution::writeSingleResult(double nowT, int carUniqueId, double X_mean, do
         all_res[data_idx].Object_parking = 1;
     else
         all_res[data_idx].Object_parking = 0;
-    if (sp_true > 0)
+    if (sp_true < 0)
         all_res[data_idx].Object_retrograde = 1;
     else
         all_res[data_idx].Object_retrograde = 0;
@@ -641,10 +655,10 @@ void Solution::getCoordinate(double distLong, double distLati, double& longitude
     double R = 6371393.0;   // 地球平均半径
     double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // 东西方向的一米在经度上跨越的度数
     double latitude_gap_per_meter = 360 / (2 * PI * R); // 南北方向的一米在纬度上跨域的度数
-    double westDeg = longitude_gap_per_meter * (distLong * cos(theta0) - distLati * sin(theta0));
-    double southDeg = latitude_gap_per_meter * (distLong * sin(theta0) + distLati * cos(theta0));
-    longitude = ori_longitude + westDeg;
-    latitude = ori_latitude + southDeg;
+    double westDeg = longitude_gap_per_meter * dirLane2EastFlage * (distLong * cos(theta0) - distLati * sin(theta0)); // 原点经度减车辆经度=westDeg
+    double southDeg = latitude_gap_per_meter * dirLane2EastFlage * (distLong * sin(theta0) + distLati * cos(theta0)); // 原点纬度减车辆纬度=southDeg
+    longitude = ori_longitude - westDeg;
+    latitude = ori_latitude - southDeg;
 }
 
 // GPST时间转换为UNIX时间
@@ -780,7 +794,7 @@ void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& L
 }
 
 // 通过标定数据，确定雷达坐标系的原点的经纬度
-void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3) {
+void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLane2EastFlage) {
     double R = 6371393.0;   // 地球平均半径
     double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // 东西方向的一米在经度上跨越的度数
     double latitude_gap_per_meter = 360 / (2 * PI * R); // 南北方向的一米在纬度上跨域的度数
@@ -789,20 +803,20 @@ void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double th
     for (int i = 0; i < nLane1; ++i) {
         double westDeg = longitude_gap_per_meter * (LaneRadarTrack1[i][0] * cos(theta0) - LaneRadarTrack1[i][1] * sin(theta0));
         double southDeg = latitude_gap_per_meter * (LaneRadarTrack1[i][0] * sin(theta0) + LaneRadarTrack1[i][1] * cos(theta0));
-        ori_coordinateLong += (LaneRadarTrack1[i][3] + westDeg);
-        ori_coordinateLat += (LaneRadarTrack1[i][2] + southDeg);
+        ori_coordinateLong += (LaneRadarTrack1[i][3] + dirLane2EastFlage * westDeg);
+        ori_coordinateLat += (LaneRadarTrack1[i][2] + dirLane2EastFlage * southDeg);
     }
     for (int i = 0; i < nLane2; ++i) {
         double westDeg = longitude_gap_per_meter * (LaneRadarTrack2[i][0] * cos(theta0) - LaneRadarTrack2[i][1] * sin(theta0));
         double southDeg = latitude_gap_per_meter * (LaneRadarTrack2[i][0] * sin(theta0) + LaneRadarTrack2[i][1] * cos(theta0));
-        ori_coordinateLong += (LaneRadarTrack2[i][3] + westDeg);
-        ori_coordinateLat += (LaneRadarTrack2[i][2] + southDeg);
+        ori_coordinateLong += (LaneRadarTrack2[i][3] + dirLane2EastFlage * westDeg);
+        ori_coordinateLat += (LaneRadarTrack2[i][2] + dirLane2EastFlage * southDeg);
     }
     for (int i = 0; i < nLane3; ++i) {
         double westDeg = longitude_gap_per_meter * (LaneRadarTrack3[i][0] * cos(theta0) - LaneRadarTrack3[i][1] * sin(theta0));
         double southDeg = latitude_gap_per_meter * (LaneRadarTrack3[i][0] * sin(theta0) + LaneRadarTrack3[i][1] * cos(theta0));
-        ori_coordinateLong += (LaneRadarTrack3[i][3] + westDeg);
-        ori_coordinateLat += (LaneRadarTrack3[i][2] + southDeg);
+        ori_coordinateLong += (LaneRadarTrack3[i][3] + dirLane2EastFlage * westDeg);
+        ori_coordinateLat += (LaneRadarTrack3[i][2] + dirLane2EastFlage * southDeg);
     }
     ori_longitude = ori_coordinateLong / (nLane1 + nLane2 + nLane3);
     ori_latitude = ori_coordinateLat / (nLane1 + nLane2 + nLane3);
@@ -844,12 +858,13 @@ void getMaxVarX_MaxVarY(double maxCarX, double maxCarY, double theta2, double& m
 // 检查指定点是否位于区域内
 bool check_in_zone(double k, double b_left, double b_right, double x, double y) {
     double b_tmp;
-    if (b_left < b_right) {
-        b_tmp = b_left;
-        b_left = b_right;
-        b_right = b_tmp;
-    }
-    if (k * x + b_left > y && k * x + b_right < y) // 在界内
+    //if (b_left < b_right) {
+    //    b_tmp = b_left;
+    //    b_left = b_right;
+    //    b_right = b_tmp;
+    //}
+    //if (k * x + b_left > y && k * x + b_right < y) // 在界内
+    if (b_left < y && y < b_right) // 在界内
         return true;
     else    // 在界外
         return false;
@@ -954,4 +969,31 @@ void setRows(vector<vector<double>>& tracer_Pbuffer, const vector<vector<double>
             tracer_Pbuffer[start_row * 2 + i][j] = P_posterior[i][j];
         }
     }
+}
+
+// 通过计算雷达数据中的合理数据的速度为正的点数和为负的点数，确定车道的来向和去向，同时返回横向位置的均值
+int check_dir(const std::vector<Radar>& RadarData, double& meanY) {
+    int n_radar_data = RadarData.size();
+    int posCnt = 0;
+    int negCnt = 0;
+    double totY = 0;
+
+    for (int i = 0; i < n_radar_data; ++i) {
+        double y = RadarData[i].DistLat;
+        double speed = RadarData[i].VeloRadial;
+        double RCS = RadarData[i].RCS;
+
+        if (check_in_zone(0, -12.8, 12.8, 0, y) && RCS > 10) {
+            if (speed < 0) {
+                negCnt++;
+                totY = totY + y;
+            }
+            else if (speed > 0) {
+                posCnt++;
+                totY = totY + y;
+            }
+        }
+    }
+    meanY = totY / (posCnt + negCnt);
+    return (posCnt > negCnt) ? 1 : -1;
 }

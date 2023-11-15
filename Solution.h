@@ -68,7 +68,7 @@ extern void find_relate_data(int i, int j, const vector<Radar>& RadarData, const
 // 利用最小二乘法，拟合数据LaneRadarTrack_x, LaneRadarTrack1_y为y = kx + b的形式
 extern void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& LaneRadarTrack_y, double& k, double& b);
 // 通过标定数据，确定雷达坐标系的原点的经纬度
-extern void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3);
+extern void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLane2EastFlage);
 // 求出两条界限直线的截距
 extern void get_intercept(double k, double b1, double b3, double& b_left, double& b_right);
 // 设置同一辆车的在前后帧的在车道上的最大纵向距离偏差和最大横向距离偏差
@@ -87,6 +87,8 @@ extern vector<vector<double>> matrixAddition(const vector<vector<double>>& A, co
 extern vector<vector<double>> matrixSubtraction(const vector<vector<double>>& A, const vector<vector<double>>& B);
 // 执行矩阵在对应行上赋值的函数
 extern void setRows(vector<vector<double>>& tracer_Pbuffer, const vector<vector<double>>& P_posterior, int start_row);
+// 通过计算雷达数据中的合理数据的速度为正的点数和为负的点数，确定车道的来向和去向，同时返回横向位置的均值
+extern int check_dir(const std::vector<Radar>& RadarData, double& meanY);
 
 // PI常数;
 extern const double PI;
@@ -117,6 +119,8 @@ public:
 	double k;	/**< 车道斜率*/
 	double kAti;	/**< 海拔斜率*/
 	double bAti;	/**< 海拔截距*/
+    int dirLaneFlag;    /**< 车道相对于探测器来说是去向，值为1，反向，值为-1*/
+    int dirLane2EastFlage; /**< 标定车辆的东向速度为负，值为-1， 否则，值为1*/
 
 	void init();	/**< 初始化程序*/
 	void run();		/**< 主算法*/
