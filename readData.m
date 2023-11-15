@@ -1,21 +1,18 @@
+% RadarData_file = ".\A_data\RadarData.csv";
+% Lane1_file = ".\A_data\Lane1_rtk.dat";
+% Lane2_file = ".\A_data\Lane2_rtk.dat";
+% Lane3_file = ".\A_data\Lane3_rtk.dat";
 RadarData_file = ".\data\RadarData.csv";
 Lane1_file = ".\data\Lane1_rtk.dat";
 Lane2_file = ".\data\Lane2_rtk.dat";
 Lane3_file = ".\data\Lane3_rtk.dat";
-Lane1_file_A = ".\A_data\Lane1_rtk.xlsx";
-Lane2_file_A = ".\A_data\Lane2_rtk.xlsx";
-Lane3_file_A = ".\A_data\Lane3_rtk.xlsx";
 RadarData_table = readtable(RadarData_file);
-Lane1_table = readRtk(Lane1_file, 11, 10357);
-Lane2_table = readRtk(Lane2_file, 11, 9505);
-Lane3_table = readRtk(Lane3_file, 11, 9944);
-
-Lane1_table_A = readtable(Lane1_file_A);
-Lane2_table_A = readtable(Lane2_file_A);
-Lane3_table_A = readtable(Lane3_file_A);
-Lane1_A = Lane1_table_A{:, 2:12};
-Lane2_A = Lane2_table_A{:, 2:12};
-Lane3_A = Lane3_table_A{:, 2:12};
+% Lane1_table = readRtk(Lane1_file, 11, 8669);
+% Lane2_table = readRtk(Lane2_file, 11, 10027);
+% Lane3_table = readRtk(Lane3_file, 11, 9994);
+Lane1_table = readRtk(Lane1_file, 11, 10275);
+Lane2_table = readRtk(Lane2_file, 11, 9429);
+Lane3_table = readRtk(Lane3_file, 11, 9865);
 
 Lane1 = Lane1_table(Lane1_table(:, 1) ~= 0, :);
 Lane2 = Lane2_table(Lane2_table(:, 1) ~= 0, :);

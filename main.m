@@ -7,78 +7,45 @@ R = [4 0; 0 0.04];  % 观测噪声协方差矩阵R，p(v)~N(0,R)
 H = [1 0; 0 1]; % 状态观测矩阵
 P = R;
 P_posterior = P;
-[LaneRadarTrack1] = mapLane2Radar(RadarData, Lane1);
-[LaneRadarTrack2] = mapLane2Radar(RadarData, Lane2);
-[LaneRadarTrack3] = mapLane2Radar(RadarData, Lane3);
-LaneRadarTrack1_choose = LaneRadarTrack1(~isnan(LaneRadarTrack1(:, 1)), :);
-LaneRadarTrack2_choose = LaneRadarTrack2(~isnan(LaneRadarTrack2(:, 2)), :);
-LaneRadarTrack3_choose = LaneRadarTrack3(~isnan(LaneRadarTrack3(:, 3)), :);
-
-[k1, b1] = line_plofit(LaneRadarTrack1_choose(:, 2), LaneRadarTrack1_choose(:, 3));
-[k2, b2] = line_plofit(LaneRadarTrack2_choose(:, 2), LaneRadarTrack2_choose(:, 3));
-[k3, b3] = line_plofit(LaneRadarTrack3_choose(:, 2), LaneRadarTrack3_choose(:, 3));
-
-nLane1 = size(LaneRadarTrack1_choose, 1);
-nLane2 = size(LaneRadarTrack2_choose, 2);
-nLane3 = size(LaneRadarTrack3_choose, 3);
-% k = (k1 * nLane1 + k2 * nLane2 + k3 * nLane3) / (nLane1 + nLane2 + nLane3);
-k = 0;
-tan1 = LaneRadarTrack1_choose(:, 6) ./ LaneRadarTrack1_choose(:, 7);
-tan2 = LaneRadarTrack2_choose(:, 6) ./ LaneRadarTrack2_choose(:, 7);
-tan3 = LaneRadarTrack3_choose(:, 6) ./ LaneRadarTrack3_choose(:, 7);
+LaneRadarTrack1 = LaneRadarTrack1(~isnan(LaneRadarTrack1(:, 1)), :);
+LaneRadarTrack2 = LaneRadarTrack2(~isnan(LaneRadarTrack2(:, 2)), :);
+LaneRadarTrack3 = LaneRadarTrack3(~isnan(LaneRadarTrack3(:, 3)), :);
+[k1, b1] = line_plofit(LaneRadarTrack1(:, 2), LaneRadarTrack1(:, 3));
+[k2, b2] = line_plofit(LaneRadarTrack2(:, 2), LaneRadarTrack2(:, 3));
+[k3, b3] = line_plofit(LaneRadarTrack3(:, 2), LaneRadarTrack3(:, 3));
+k = (k1 + k2 + k3) / 3;     % 车道在雷达坐标系上的斜率
+tan1 = LaneRadarTrack1(:, 6) ./ LaneRadarTrack1(:, 7);
+tan2 = LaneRadarTrack2(:, 6) ./ LaneRadarTrack2(:, 7);
+tan3 = LaneRadarTrack3(:, 6) ./ LaneRadarTrack3(:, 7);
 arcTan1 = atan(tan1);
 arcTan2 = atan(tan2);
 arcTan3 = atan(tan3);
-latitudeMean = mean([Lane1(:, 3); Lane2(:, 3); Lane3(:, 3)]);   % 平均纬度
-theta1 = mean([arcTan1; arcTan2; arcTan3]); % 经纬度与车道坐标系之间的角度偏差
+theta1 = mean([arcTan1; arcTan2; arcTan3]); % 经纬度与雷达坐标系之间的角度偏差
 theta2 = atan(k);   % 车道与雷达坐标系之间的角度偏差
-delta = 0 + 0 / 1000000;
-theta0 = theta1 - 0 + delta;
-[ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1_choose, LaneRadarTrack2_choose, LaneRadarTrack3_choose);
+delta = 0 + 2416 / 1000000;
+theta0 = theta1 - theta2 + delta;   % 经纬度与车道之间的角度偏差
+latitudeMean = mean([LaneRadarTrack1(:, 4); LaneRadarTrack2(:, 4); LaneRadarTrack3(:, 4)]); % 平均纬度
+[ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLane2EastFlage);
 % [b_left, b_right] = get_intercept(k, b1, b3);
+b_left = meanY - 7.2;
+b_right = meanY + 7.2;
 cosTheta2 = cos(atan(k));
 sinTheta2 = sin(atan(k));
 
-[kAti1, bAti1] = line_plofit(LaneRadarTrack1_choose(:, 2), LaneRadarTrack1_choose(:, 15));
-[kAti2, bAti2] = line_plofit(LaneRadarTrack2_choose(:, 2), LaneRadarTrack2_choose(:, 15));
-[kAti3, bAti3] = line_plofit(LaneRadarTrack3_choose(:, 2), LaneRadarTrack3_choose(:, 15));
-kAti = (kAti1 * nLane1 + kAti2 * nLane2 + kAti3 * nLane3) / (nLane1 + nLane2 + nLane3);
-bAti = (bAti1 * nLane1 + bAti2 * nLane2 + bAti3 * nLane3) / (nLane1 + nLane2 + nLane3);
-
-    theta2 = 0;
-    cosTheta2 = 1;
-    sinTheta2 = 0;
-    theta0 = 0.497974774035970;
-    latitudeMean = 23.264113717225055;
-    ori_longitude = 113.5252998913331;
-    ori_latitude = 23.263563972364057;
-    b_left = 7.6;
-    b_right = -6.8;
-    k = 0;
-    kAti = 0.004225344416807;
-    bAti = 26.899624552922948;
-
-    % theta2 = -0.005046118396185;
-    % cosTheta2 = 0.999987268371582;
-    % sinTheta2 = -0.005046096981066;
-    % theta0 = 0.505648618725381;
-    % latitudeMean = 23.262841934043035;
-    % ori_longitude = 113.525249970317049;
-    % ori_latitude = 23.263544188509108;
-    % b_left = 0.589836551857512;
-    % b_right = -13.810346785925899;
-    % k = -0.025046161226915;
-    % kAti = 0.004225344416807;
-    % bAti = 26.899624552922948;
+[kAti1, bAti1] = line_plofit(LaneRadarTrack1(:, 2), LaneRadarTrack1(:, 15));
+[kAti2, bAti2] = line_plofit(LaneRadarTrack2(:, 2), LaneRadarTrack2(:, 15));
+[kAti3, bAti3] = line_plofit(LaneRadarTrack3(:, 2), LaneRadarTrack3(:, 15));
+kAti = (kAti1 + kAti2 + kAti3) / 3;
+bAti = (bAti1 + bAti2 + bAti3) / 3;
 
 n_radar_data = size(RadarData, 1);
 n_Gap = length(unique(RadarData(:,1)));  % 预先算出帧数，以预先进行内存分配，matlab用vector类的话，不用这么这么做
 frameGapIdx = zeros(n_Gap + 1, 1);  % 预先算出每一帧的第一个数据在雷达数据中出现的位置
 frameGapIdx(n_Gap + 1) = n_radar_data + 1;
 
-carA = 6;   % 设置汽车在一般情况下的最大加速度为carAm/s^2，包括正向与负向的
+carA = 5;   % 设置汽车在一般情况下的最大加速度为carAm/s^2，包括正向与负向的
 maxCarX = 10;   % 预设车辆长度为maxCarXm
-maxCarY = 3;    % 预设车辆宽度为maxCarYm
+maxCarY = 2;    % 预设车辆宽度为maxCarYm
 [maxVarX, maxVarY] = getMaxVarX_MaxVarY(maxCarX, maxCarY, theta2);  % 设置同一辆车的在前后帧的在车道上的最大纵向距离偏差和最大横向距离偏差
 
 maxVarRCS = 1500; % 设置同一辆车的在前后帧的RCS偏差
@@ -127,7 +94,7 @@ for cnt = 1 : n_Gap
     BlockIndex = zeros(OKIndexPointer_len, 1);
     [curFrameData, sortedIdx] = sortrows(RadarData(frameStart + OKIndex, :), [5 3 4 6]); % 挑出合理的雷达数据点，同时先后对速度，纵向距离，横向距离，RCS升序排序
     OKIndex = OKIndex(sortedIdx);
-    if (OKIndexPointer_len == 0)
+    if isempty(OKIndex)
         continue;
     end
     nowT = curFrameData(1, 1);  % 记录现在的时刻
@@ -232,8 +199,8 @@ for cnt = 1 : n_Gap
             X_posterior = X_prior + K * (Z_measure - H * X_prior);
 
             if X_posterior(1) < 400 
-                % X_mean = X_posterior(1);
-                % sp_mean = X_posterior(2);
+                X_mean = X_posterior(1);
+                sp_mean = X_posterior(2);
             else                    % 如果滤波值>400，则不采用滤波值，并强行结束追踪
                 coupleFlag = 0;
                 tracer_buffer(i, 3) = maxFailTime + 1;
@@ -242,10 +209,13 @@ for cnt = 1 : n_Gap
             % 更新状态估计协方差矩阵P
             P_posterior = (eye(2, 2) - K * H) * P_prior;
             carID_buffer(carID + 1) = carID_buffer(carID + 1) + 1;
+            if (data_idx == 4461)
+                a = 1;
+            end
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen,...
-                kAti, bAti, RadarDataID);
+                kAti, bAti, RadarDataID, dirLane2EastFlage);
             % 更新在缓冲区的数据
             tracer_buffer(i, 1) = data_idx;
             tracer_buffer(i, 2) = RadarDataID;
@@ -328,7 +298,7 @@ for cnt = 1 : n_Gap
             all_res(data_idx, :) = writeResult(nowT, carUniqueId, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, Y_mean, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen, ...
-                kAti, bAti, RadarDataID);
+                kAti, bAti, RadarDataID, dirLane2EastFlage);
             tracer_pointer = tracer_pointer + 1;
             tracer_buffer(tracer_pointer, 1) = data_idx;
             tracer_buffer(tracer_pointer, 2) = RadarDataID; 
