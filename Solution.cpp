@@ -259,7 +259,7 @@ void Solution::init() {
     theta0 = theta1 - theta2 + 0;
     latitudeMean = latitudeMean / (nLane1 + nLane2 + nLane3);   // 平均纬度
     ori_longitude = 0.0, ori_latitude = 0.0;
-    cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLane2EastFlage);
+    cal_ori_lat_and_long(ori_longitude, ori_latitude, theta0, latitudeMean, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLaneFlag);
     b_left = 0.0, b_right = 0.0;
     //get_intercept(k, b1, b3, b_left, b_right);
     cosTheta2 = cos(atan(k)), sinTheta2 = sin(atan(k));
@@ -647,8 +647,8 @@ void Solution::getCoordinate(double distLong, double distLati, double& longitude
     double R = 6371393.0;   // 地球平均半径
     double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // 东西方向的一米在经度上跨越的度数
     double latitude_gap_per_meter = 360 / (2 * PI * R); // 南北方向的一米在纬度上跨域的度数
-    double westDeg = longitude_gap_per_meter * dirLane2EastFlage * (distLong * cos(theta0) - distLati * sin(theta0)); // 原点经度减车辆经度=westDeg
-    double southDeg = latitude_gap_per_meter * dirLane2EastFlage * (distLong * sin(theta0) + distLati * cos(theta0)); // 原点纬度减车辆纬度=southDeg
+    double westDeg = longitude_gap_per_meter * dirLaneFlag * (distLong * cos(theta0) - distLati * sin(theta0)); // 原点经度减车辆经度=westDeg
+    double southDeg = latitude_gap_per_meter * dirLaneFlag * (distLong * sin(theta0) + distLati * cos(theta0)); // 原点纬度减车辆纬度=southDeg
     longitude = ori_longitude - westDeg;
     latitude = ori_latitude - southDeg;
 }
@@ -786,7 +786,7 @@ void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& L
 }
 
 // 通过标定数据，确定雷达坐标系的原点的经纬度
-void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLane2EastFlage) {
+void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLaneFlag) {
     double R = 6371393.0;   // 地球平均半径
     double longitude_gap_per_meter = 360 / (2 * PI * R * cos(latitudeMean / 180 * PI)); // 东西方向的一米在经度上跨越的度数
     double latitude_gap_per_meter = 360 / (2 * PI * R); // 南北方向的一米在纬度上跨域的度数
@@ -795,20 +795,20 @@ void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double th
     for (int i = 0; i < nLane1; ++i) {
         double westDeg = longitude_gap_per_meter * (LaneRadarTrack1[i][0] * cos(theta0) - LaneRadarTrack1[i][1] * sin(theta0));
         double southDeg = latitude_gap_per_meter * (LaneRadarTrack1[i][0] * sin(theta0) + LaneRadarTrack1[i][1] * cos(theta0));
-        ori_coordinateLong += (LaneRadarTrack1[i][3] + dirLane2EastFlage * westDeg);
-        ori_coordinateLat += (LaneRadarTrack1[i][2] + dirLane2EastFlage * southDeg);
+        ori_coordinateLong += (LaneRadarTrack1[i][3] + dirLaneFlag * westDeg);
+        ori_coordinateLat += (LaneRadarTrack1[i][2] + dirLaneFlag * southDeg);
     }
     for (int i = 0; i < nLane2; ++i) {
         double westDeg = longitude_gap_per_meter * (LaneRadarTrack2[i][0] * cos(theta0) - LaneRadarTrack2[i][1] * sin(theta0));
         double southDeg = latitude_gap_per_meter * (LaneRadarTrack2[i][0] * sin(theta0) + LaneRadarTrack2[i][1] * cos(theta0));
-        ori_coordinateLong += (LaneRadarTrack2[i][3] + dirLane2EastFlage * westDeg);
-        ori_coordinateLat += (LaneRadarTrack2[i][2] + dirLane2EastFlage * southDeg);
+        ori_coordinateLong += (LaneRadarTrack2[i][3] + dirLaneFlag * westDeg);
+        ori_coordinateLat += (LaneRadarTrack2[i][2] + dirLaneFlag * southDeg);
     }
     for (int i = 0; i < nLane3; ++i) {
         double westDeg = longitude_gap_per_meter * (LaneRadarTrack3[i][0] * cos(theta0) - LaneRadarTrack3[i][1] * sin(theta0));
         double southDeg = latitude_gap_per_meter * (LaneRadarTrack3[i][0] * sin(theta0) + LaneRadarTrack3[i][1] * cos(theta0));
-        ori_coordinateLong += (LaneRadarTrack3[i][3] + dirLane2EastFlage * westDeg);
-        ori_coordinateLat += (LaneRadarTrack3[i][2] + dirLane2EastFlage * southDeg);
+        ori_coordinateLong += (LaneRadarTrack3[i][3] + dirLaneFlag * westDeg);
+        ori_coordinateLat += (LaneRadarTrack3[i][2] + dirLaneFlag * southDeg);
     }
     ori_longitude = ori_coordinateLong / (nLane1 + nLane2 + nLane3);
     ori_latitude = ori_coordinateLat / (nLane1 + nLane2 + nLane3);

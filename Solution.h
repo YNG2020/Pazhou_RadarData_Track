@@ -69,7 +69,7 @@ extern void find_relate_data(int i, int j, const vector<Radar>& RadarData, const
 // 利用最小二乘法，拟合数据LaneRadarTrack_x, LaneRadarTrack1_y为y = kx + b的形式
 extern void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& LaneRadarTrack_y, double& k, double& b);
 // 通过标定数据，确定雷达坐标系的原点的经纬度
-extern void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLane2EastFlage);
+extern void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLaneFlag);
 // 求出两条界限直线的截距
 extern void get_intercept(double k, double b1, double b3, double& b_left, double& b_right);
 // 设置同一辆车的在前后帧的在车道上的最大纵向距离偏差和最大横向距离偏差
