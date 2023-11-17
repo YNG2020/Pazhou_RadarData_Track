@@ -184,7 +184,6 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane, dirLaneFlag, meanY)
             cnt = cnt + 1;
             continue;
         end
-
         
         tmp_predict_x(cnt) = predict_x;
         tmp_predict_y(cnt) = predict_y;

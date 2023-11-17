@@ -25,7 +25,7 @@ theta2 = atan(k);   % 车道与雷达坐标系之间的角度偏差
 delta = 0 + 0 / 1000000;
 theta0 = theta1 - theta2 + delta;   % 经纬度与车道之间的角度偏差
 latitudeMean = mean([LaneRadarTrack1(:, 4); LaneRadarTrack2(:, 4); LaneRadarTrack3(:, 4)]); % 平均纬度
-[ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLane2EastFlage);
+[ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLaneFlag);
 % [b_left, b_right] = get_intercept(k, b1, b3);
 b_left = meanY - 7.2;
 b_right = meanY + 7.2;
@@ -211,7 +211,7 @@ for cnt = 1 : n_Gap
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen,...
-                kAti, bAti, RadarDataID, dirLane2EastFlage, dirLaneFlag);
+                kAti, bAti, RadarDataID, dirLaneFlag);
             % 更新在缓冲区的数据
             tracer_buffer(i, 1) = data_idx;
             tracer_buffer(i, 2) = RadarDataID;
@@ -294,7 +294,7 @@ for cnt = 1 : n_Gap
             all_res(data_idx, :) = writeResult(nowT, carUniqueId, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, Y_mean, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen, ...
-                kAti, bAti, RadarDataID, dirLane2EastFlage, dirLaneFlag);
+                kAti, bAti, RadarDataID, dirLaneFlag);
             tracer_pointer = tracer_pointer + 1;
             tracer_buffer(tracer_pointer, 1) = data_idx;
             tracer_buffer(tracer_pointer, 2) = RadarDataID; 

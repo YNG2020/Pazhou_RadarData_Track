@@ -2,7 +2,7 @@
 function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     RadarHeight, sp_mean, cosTheta2, sinTheta2, carLat, RCS_mean, ...
     theta0, latitudeMean, ori_longitude, ori_latitude, maxCarlen,...
-    kAti, bAti, RadarDataID, dirLane2EastFlage, dirLaneFlag)
+    kAti, bAti, RadarDataID, dirLaneFlag)
     res = zeros(1, 16);
     res(1) = nowT;
     res(2) = carID;
@@ -19,7 +19,7 @@ function res = writeResult(nowT, carID, X_mean, Y_mean, ...
     end
     res(7) = RCS_mean;
     [longitude, latitude] = getCoordinate(X_mean, Y_mean, theta0, ...
-        latitudeMean, ori_longitude, ori_latitude, dirLane2EastFlage);
+        latitudeMean, ori_longitude, ori_latitude, dirLaneFlag);
     res(9) = longitude;
     res(10) = latitude;
     res(11) = kAti * X_mean + bAti;
