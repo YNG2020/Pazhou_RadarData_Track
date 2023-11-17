@@ -8,9 +8,9 @@
 
 void rtk::readRtk(const char* rtkPath, std::vector<rtk>& rtkline) {
     rtkline.reserve(11000);
-    std::ifstream inputFile(rtkPath); // ´ò¿ªÒ»¸öÎÄ¼şÁ÷²¢Ö¸¶¨ÎÄ¼şÃû
+    std::ifstream inputFile(rtkPath); // æ‰“å¼€ä¸€ä¸ªæ–‡ä»¶æµå¹¶æŒ‡å®šæ–‡ä»¶å
     std::string line;
-    while (std::getline(inputFile, line)) { // ÖğĞĞ¶ÁÈ¡ÎÄ¼şÄÚÈİ
+    while (std::getline(inputFile, line)) { // é€è¡Œè¯»å–æ–‡ä»¶å†…å®¹
         if (line[1] == 'B')
             continue;
         rtk data;
@@ -42,22 +42,23 @@ void rtk::readRtk(const char* rtkPath, std::vector<rtk>& rtkline) {
         index++;
         rtkline.push_back(data);
     }
-    inputFile.close(); // ¹Ø±ÕÎÄ¼şÁ÷
+    inputFile.close(); // å…³é—­æ–‡ä»¶æµ
 }
 
 int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& RadarData) {
     RadarData.reserve(3000000);
-    std::ifstream inputFile(RadarDataPath); // ´ò¿ªÒ»¸öÎÄ¼şÁ÷²¢Ö¸¶¨ÎÄ¼şÃû
+    std::ifstream inputFile(RadarDataPath); // æ‰“å¼€ä¸€ä¸ªæ–‡ä»¶æµå¹¶æŒ‡å®šæ–‡ä»¶å
 
     int frameCnt = 0;
     double lastTimeStamp = -1.0;
 
     std::string line;
     std::getline(inputFile, line);
-    while (std::getline(inputFile, line)) { // ÖğĞĞ¶ÁÈ¡ÎÄ¼şÄÚÈİ
+    while (std::getline(inputFile, line)) { // é€è¡Œè¯»å–æ–‡ä»¶å†…å®¹
         Radar data;
         int index = 0;
         data.timestamp = str2double(line, index);
+        data.timestamp = round(data.timestamp * 1000.0) / 1000.0;
         if (lastTimeStamp != data.timestamp) {
             lastTimeStamp = data.timestamp;
             frameCnt = frameCnt + 1;
@@ -85,9 +86,9 @@ int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& R
 }
 
 void res::writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<int>& carID_buffer) {
-    std::ofstream outFile; // ´´½¨Ò»¸öÊä³öÎÄ¼şÁ÷¶ÔÏó
+    std::ofstream outFile; // åˆ›å»ºä¸€ä¸ªè¾“å‡ºæ–‡ä»¶æµå¯¹è±¡
     int cnt = 0;
-    // ´ò¿ªÎÄ¼ş£¬Èç¹ûÎÄ¼ş²»´æÔÚÔò´´½¨
+    // æ‰“å¼€æ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶ä¸å­˜åœ¨åˆ™åˆ›å»º
     outFile.open(Path);
     for (auto& re : Result) {
         if (re.Timestamp == 0)
@@ -110,6 +111,6 @@ void res::writeResult(const std::string& Path, std::vector<res>& Result, const s
         outFile << re.Object_overspeed;
         outFile << "\n";
     }
-    // ¹Ø±ÕÎÄ¼şÁ÷
+    // å…³é—­æ–‡ä»¶æµ
     outFile.close();
 }
