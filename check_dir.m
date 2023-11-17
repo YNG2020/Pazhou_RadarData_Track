@@ -18,10 +18,28 @@ function [dirFlag, meanY] = check_dir(RadarData)
             end
         end
     end
+    meanY = totY / (posCnt + negCnt);
+    posCnt = 0;
+    negCnt = 0;
+    totY = 0;
+    for i = 1 : n_radar_data
+        y = RadarData(i, 4);
+        speed = RadarData(i, 5);
+        RCS = RadarData(i, 6);
+        if (check_in_zone(0, meanY-7.2, meanY+7.2, 0, y) && RCS > 10)    % 合理数据点
+            if (speed < 0)
+                negCnt = negCnt + 1;
+                totY = totY + y;
+            elseif (speed > 0)
+                posCnt = posCnt + 1;
+                totY = totY + y;
+            end
+        end
+    end
+    meanY = totY / (posCnt + negCnt);
     if posCnt > negCnt
         dirFlag = 1;
     else
         dirFlag = -1;
     end
-    meanY = totY / (posCnt + negCnt);
 end

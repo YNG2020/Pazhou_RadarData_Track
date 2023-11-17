@@ -22,7 +22,7 @@ arcTan2 = atan(tan2);
 arcTan3 = atan(tan3);
 theta1 = mean([arcTan1; arcTan2; arcTan3]); % 经纬度与雷达坐标系之间的角度偏差
 theta2 = atan(k);   % 车道与雷达坐标系之间的角度偏差
-delta = 0 + 2416 / 1000000;
+delta = 0 + 0 / 1000000;
 theta0 = theta1 - theta2 + delta;   % 经纬度与车道之间的角度偏差
 latitudeMean = mean([LaneRadarTrack1(:, 4); LaneRadarTrack2(:, 4); LaneRadarTrack3(:, 4)]); % 平均纬度
 [ori_longitude, ori_latitude] = cal_ori_lat_and_long(theta0, LaneRadarTrack1, LaneRadarTrack2, LaneRadarTrack3, dirLane2EastFlage);
@@ -209,13 +209,10 @@ for cnt = 1 : n_Gap
             % 更新状态估计协方差矩阵P
             P_posterior = (eye(2, 2) - K * H) * P_prior;
             carID_buffer(carID + 1) = carID_buffer(carID + 1) + 1;
-            if (data_idx == 4461)
-                a = 1;
-            end
             all_res(data_idx, :) = writeResult(nowT, carID, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, carDisLat, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen,...
-                kAti, bAti, RadarDataID, dirLane2EastFlage);
+                kAti, bAti, RadarDataID, dirLane2EastFlage, dirLaneFlag);
             % 更新在缓冲区的数据
             tracer_buffer(i, 1) = data_idx;
             tracer_buffer(i, 2) = RadarDataID;
@@ -298,7 +295,7 @@ for cnt = 1 : n_Gap
             all_res(data_idx, :) = writeResult(nowT, carUniqueId, X_mean, Y_mean, ...
                 RadarHeight, sp_mean, cosTheta2, sinTheta2, Y_mean, RCS_mean, ...
                 theta0, latitudeMean, ori_longitude, ori_latitude, maxCarLen, ...
-                kAti, bAti, RadarDataID, dirLane2EastFlage);
+                kAti, bAti, RadarDataID, dirLane2EastFlage, dirLaneFlag);
             tracer_pointer = tracer_pointer + 1;
             tracer_buffer(tracer_pointer, 1) = data_idx;
             tracer_buffer(tracer_pointer, 2) = RadarDataID; 
@@ -318,7 +315,7 @@ for i = 1 : data_idx
 end
 
 final_data = all_res(1 : data_idx, 1:14);
-final_data = final_data(removeFlag == 0, :);
-final_data2 = all_res(1 : data_idx, :);
-final_data2 = final_data2(removeFlag == 0, :);
+% final_data = final_data(removeFlag == 0, :);
+% final_data2 = all_res(1 : data_idx, :);
+% final_data2 = final_data2(removeFlag == 0, :);
 % writematrix(final_data, 'result.csv')
