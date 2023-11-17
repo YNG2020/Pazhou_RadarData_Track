@@ -121,7 +121,7 @@ public:
 	double kAti;	/**< 海拔斜率*/
 	double bAti;	/**< 海拔截距*/
     int dirLaneFlag;    /**< 车道相对于探测器来说是去向，值为1，反向，值为-1*/
-    int dirLane2EastFlage; /**< 标定车辆的东向速度为负，值为-1， 否则，值为1*/
+    int dirLane2EastFlage; /**< 标定车辆的东向速度为负，值为1， 否则，值为-1*/
 
 	void init();	/**< 初始化程序*/
 	void run();		/**< 主算法*/
