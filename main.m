@@ -205,7 +205,6 @@ for cnt = 1 : n_Gap
                 coupleFlag = 0;
                 tracer_buffer(i, 3) = maxFailTime + 1;
             end
-
             % 更新状态估计协方差矩阵P
             P_posterior = (eye(2, 2) - K * H) * P_prior;
             carID_buffer(carID + 1) = carID_buffer(carID + 1) + 1;
@@ -315,7 +314,7 @@ for i = 1 : data_idx
 end
 
 final_data = all_res(1 : data_idx, 1:14);
-% final_data = final_data(removeFlag == 0, :);
-% final_data2 = all_res(1 : data_idx, :);
-% final_data2 = final_data2(removeFlag == 0, :);
+final_data = final_data(removeFlag == 0, :);
+final_data2 = all_res(1 : data_idx, :);
+final_data2 = final_data2(removeFlag == 0, :);
 % writematrix(final_data, 'result.csv')
