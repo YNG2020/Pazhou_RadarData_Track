@@ -39,7 +39,7 @@ struct Radar{
     static int readRadarData(const std::string& RadarDataPath, std::vector<Radar>& RadarData);
 };
 
-struct targetInfo //鏍囧畾杞﹁締鍦ㄩ浄杈惧尯鍩熺殑娑堟伅
+struct targetInfo //标定车辆在雷达区域的消息
 {
     unsigned long ID;
     double Object_DistLong;
@@ -51,7 +51,7 @@ struct targetInfo //鏍囧畾杞﹁締鍦ㄩ浄杈惧尯鍩熺殑娑堟伅
     double VeloRadial;
     double timestamp;
     double RCS;
-    double Velodis; //鐩爣閫熷害涔嬪樊
+    double Velodis; //目标速度之差
     void print(){
         printf("%ld,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f,%.15f\n",
             ID,Object_DistLong,Object_DistLat,Object_Longitude,Object_Latitude,Object_VeloLat

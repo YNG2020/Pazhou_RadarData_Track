@@ -10,7 +10,7 @@ struct res;
 using std::vector;
 
 
-// å­—ç¬¦ä¸²è½¬å°æ•°1
+// ×Ö·û´®×ªĞ¡Êı1
 inline double str2double(std::string& str) {
     double num = 0;
     int index = 0;
@@ -33,7 +33,7 @@ inline double str2double(std::string& str) {
     return num * flag;
 }
 
-// å­—ç¬¦ä¸²è½¬å°æ•°2
+// ×Ö·û´®×ªĞ¡Êı2
 inline double str2double(std::string& str, int& index) {
     double num = 0;
     int flag = 1;
@@ -58,76 +58,76 @@ inline double str2double(std::string& str, int& index) {
     return num * flag;
 }
 
-// GPSTæ—¶é—´è½¬æ¢ä¸ºUNIXæ—¶é—´
+// GPSTÊ±¼ä×ª»»ÎªUNIXÊ±¼ä
 extern double GPST2UNIX(int weeks, double second_in_weeks);
-// é¢„æµ‹è½¦è¾†åœ¨ä¸‹ä¸€å¸§å‡ºç°çš„ä½ç½®ï¼Œå°†å†å²é€Ÿåº¦ä¸å½“å‰é€Ÿåº¦åšä¸€ä¸ªæƒè¡¡ï¼Œç”¨æƒè¡¡åçš„é€Ÿåº¦ä¹˜ä»¥ç»è¿‡çš„æ—¶é—´ï¼ŒåŠ ä¸ŠåŸæœ¬çš„ä½ç½®ï¼Œå³å¾—åˆ°é¢„æµ‹ä½ç½®
+// Ô¤²â³µÁ¾ÔÚÏÂÒ»Ö¡³öÏÖµÄÎ»ÖÃ£¬½«ÀúÊ·ËÙ¶ÈÓëµ±Ç°ËÙ¶È×öÒ»¸öÈ¨ºâ£¬ÓÃÈ¨ºâºóµÄËÙ¶È³ËÒÔ¾­¹ıµÄÊ±¼ä£¬¼ÓÉÏÔ­±¾µÄÎ»ÖÃ£¬¼´µÃµ½Ô¤²âÎ»ÖÃ
 extern void predict_lot(int LastOKIDX, int tmpDotIdx, vector<Radar>::iterator radarBegin, const vector<vector<double>>& laneRadarTrackBegin, int lastLastOKIdx, double& predict_x, double& predict_y);
-// é€šè¿‡è½¦è¾†å½“å‰çš„xï¼Œyï¼Œzåæ ‡ï¼Œä»¥åŠå¾„å‘é€Ÿåº¦ï¼Œè®¡ç®—å…¶å®é™…é€Ÿåº¦ï¼ˆç»Ÿä¸€é»˜è®¤è½¦è¾†æ²¿ç€è½¦é“è¡Œé©¶ï¼Œåœ¨è¯¯å·®å¯æ¥å—çš„èŒƒå›´å†…ï¼Œè‹¥é»˜è®¤è½¦é“æ–¹å‘å°±æ˜¯xè½´æ­£å‘æ–¹å‘ï¼Œæ­¤æ—¶alpha=1ï¼‰
+// Í¨¹ı³µÁ¾µ±Ç°µÄx£¬y£¬z×ø±ê£¬ÒÔ¼°¾¶ÏòËÙ¶È£¬¼ÆËãÆäÊµ¼ÊËÙ¶È£¨Í³Ò»Ä¬ÈÏ³µÁ¾ÑØ×Å³µµÀĞĞÊ»£¬ÔÚÎó²î¿É½ÓÊÜµÄ·¶Î§ÄÚ£¬ÈôÄ¬ÈÏ³µµÀ·½Ïò¾ÍÊÇxÖáÕıÏò·½Ïò£¬´ËÊ±alpha=1£©
 extern double v_true_cal(double x, double y, double z, double v_r, double alpha);
-// è¯¥éƒ¨åˆ†ç”¨äºæ£€æµ‹å¾„å‘é€Ÿåº¦ç›¸è¿‘ä¸”ä½ç½®æ¥è¿‘çš„é›·è¾¾æ•°æ®
+// ¸Ã²¿·ÖÓÃÓÚ¼ì²â¾¶ÏòËÙ¶ÈÏà½üÇÒÎ»ÖÃ½Ó½üµÄÀ×´ïÊı¾İ
 extern void find_relate_data(int i, int j, const vector<Radar>& RadarData, const vector<int>& radarFrameTimeIdx, const vector<int>& Lane2FrameIdx, int DotIdx, int n_Frame, const vector<int>& idx, double& radar_x, double& radar_y, const vector<vector<double>>& LaneRadarTrack, int LastOKIDX, double& sp_mean);
-// åˆ©ç”¨æœ€å°äºŒä¹˜æ³•ï¼Œæ‹Ÿåˆæ•°æ®LaneRadarTrack_x, LaneRadarTrack1_yä¸ºy = kx + bçš„å½¢å¼
+// ÀûÓÃ×îĞ¡¶ş³Ë·¨£¬ÄâºÏÊı¾İLaneRadarTrack_x, LaneRadarTrack1_yÎªy = kx + bµÄĞÎÊ½
 extern void line_plofit(const vector<double>& LaneRadarTrack_x, const vector<double>& LaneRadarTrack_y, double& k, double& b);
-// é€šè¿‡æ ‡å®šæ•°æ®ï¼Œç¡®å®šé›·è¾¾åæ ‡ç³»çš„åŸç‚¹çš„ç»çº¬åº¦
+// Í¨¹ı±ê¶¨Êı¾İ£¬È·¶¨À×´ï×ø±êÏµµÄÔ­µãµÄ¾­Î³¶È
 extern void cal_ori_lat_and_long(double& ori_longitude, double& ori_latitude, double theta0, double latitudeMean, const vector<vector<double>>& LaneRadarTrack1, const vector<vector<double>>& LaneRadarTrack2, const vector<vector<double>>& LaneRadarTrack3, int dirLaneFlag);
-// æ±‚å‡ºä¸¤æ¡ç•Œé™ç›´çº¿çš„æˆªè·
+// Çó³öÁ½Ìõ½çÏŞÖ±ÏßµÄ½Ø¾à
 extern void get_intercept(double k, double b1, double b3, double& b_left, double& b_right);
-// è®¾ç½®åŒä¸€è¾†è½¦çš„åœ¨å‰åå¸§çš„åœ¨è½¦é“ä¸Šçš„æœ€å¤§çºµå‘è·ç¦»åå·®å’Œæœ€å¤§æ¨ªå‘è·ç¦»åå·®
+// ÉèÖÃÍ¬Ò»Á¾³µµÄÔÚÇ°ºóÖ¡µÄÔÚ³µµÀÉÏµÄ×î´ó×İÏò¾àÀëÆ«²îºÍ×î´óºáÏò¾àÀëÆ«²î
 extern void getMaxVarX_MaxVarY(double maxCarX, double maxCarY, double theta2, double& maxVarX, double& maxVarY);
-// æ£€æŸ¥æŒ‡å®šç‚¹æ˜¯å¦ä½äºåŒºåŸŸå†…
+// ¼ì²éÖ¸¶¨µãÊÇ·ñÎ»ÓÚÇøÓòÄÚ
 extern bool check_in_zone(double k, double b_left, double b_right, double x, double y);
-// æ‰§è¡ŒçŸ©é˜µä¹˜æ³•çš„å‡½æ•°
+// Ö´ĞĞ¾ØÕó³Ë·¨µÄº¯Êı
 extern vector<vector<double>> matrixMultiply(const vector<vector<double>>& A, const vector<vector<double>>& B);
-// æ‰§è¡ŒçŸ©é˜µæ±‚é€†çš„å‡½æ•°
+// Ö´ĞĞ¾ØÕóÇóÄæµÄº¯Êı
 extern vector<vector<double>> matrixInverse(const vector<vector<double>>& A);
-// æ‰§è¡ŒçŸ©é˜µè½¬ç½®çš„å‡½æ•°
+// Ö´ĞĞ¾ØÕó×ªÖÃµÄº¯Êı
 extern vector<vector<double>> transposeMatrix(const vector<vector<double>>& A);
-// æ‰§è¡ŒçŸ©é˜µåŠ æ³•çš„å‡½æ•°
+// Ö´ĞĞ¾ØÕó¼Ó·¨µÄº¯Êı
 extern vector<vector<double>> matrixAddition(const vector<vector<double>>& A, const vector<vector<double>>& B);
-// æ‰§è¡ŒçŸ©é˜µå‡æ³•çš„å‡½æ•°
+// Ö´ĞĞ¾ØÕó¼õ·¨µÄº¯Êı
 extern vector<vector<double>> matrixSubtraction(const vector<vector<double>>& A, const vector<vector<double>>& B);
-// æ‰§è¡ŒçŸ©é˜µåœ¨å¯¹åº”è¡Œä¸Šèµ‹å€¼çš„å‡½æ•°
+// Ö´ĞĞ¾ØÕóÔÚ¶ÔÓ¦ĞĞÉÏ¸³ÖµµÄº¯Êı
 extern void setRows(vector<vector<double>>& tracer_Pbuffer, const vector<vector<double>>& P_posterior, int start_row);
-// é€šè¿‡è®¡ç®—é›·è¾¾æ•°æ®ä¸­çš„åˆç†æ•°æ®çš„é€Ÿåº¦ä¸ºæ­£çš„ç‚¹æ•°å’Œä¸ºè´Ÿçš„ç‚¹æ•°ï¼Œç¡®å®šè½¦é“çš„æ¥å‘å’Œå»å‘ï¼ŒåŒæ—¶è¿”å›æ¨ªå‘ä½ç½®çš„å‡å€¼
+// Í¨¹ı¼ÆËãÀ×´ïÊı¾İÖĞµÄºÏÀíÊı¾İµÄËÙ¶ÈÎªÕıµÄµãÊıºÍÎª¸ºµÄµãÊı£¬È·¶¨³µµÀµÄÀ´ÏòºÍÈ¥Ïò£¬Í¬Ê±·µ»ØºáÏòÎ»ÖÃµÄ¾ùÖµ
 extern int check_dir(const std::vector<Radar>& RadarData, double& meanY);
 
-// PIå¸¸æ•°;
+// PI³£Êı;
 extern const double PI;
 
 /**
 * @class <Solution> [solution.h]
-* @brief ç”¨äºå…¨å±€ç»Ÿç­¹çš„ä¸€ä¸ªç±»
+* @brief ÓÃÓÚÈ«¾ÖÍ³³ïµÄÒ»¸öÀà
 */
 class Solution {
 public:
 
-	vector<rtk> rtkLine1;	/**< æ ‡å®šæ•°æ®1*/
-	vector<rtk> rtkLine2;	/**< æ ‡å®šæ•°æ®2*/
-	vector<rtk> rtkLine3;	/**< æ ‡å®šæ•°æ®3*/
-	vector<Radar> RadarData;	/**< å…¨ä½“é›·è¾¾æ•°æ®*/
-	vector<res> Results;	/**< å­˜æ”¾å…¨ä½“ç»“æœ*/
+	vector<rtk> rtkLine1;	/**< ±ê¶¨Êı¾İ1*/
+	vector<rtk> rtkLine2;	/**< ±ê¶¨Êı¾İ2*/
+	vector<rtk> rtkLine3;	/**< ±ê¶¨Êı¾İ3*/
+	vector<Radar> RadarData;	/**< È«ÌåÀ×´ïÊı¾İ*/
+	vector<res> Results;	/**< ´æ·ÅÈ«Ìå½á¹û*/
 
-	int n_Gap;	/**< å…¨ä½“é›·è¾¾æ•°æ®ä¸­çš„å¸§æ•°*/
-	double theta2;	/**< è½¦é“ä¸é›·è¾¾åæ ‡ç³»ä¹‹é—´çš„è§’åº¦åå·®*/
-	double cosTheta2;	/**< theta2ä½™å¼¦å€¼*/
-	double sinTheta2;	/**< theta2æ­£å¼¦å€¼*/
-	double theta0;	/**< ç»çº¬åº¦ä¸è½¦é“ä¹‹é—´çš„è§’åº¦åå·®*/
-	double latitudeMean;	/**< å¹³å‡çº¬åº¦*/
-	double ori_longitude;	/**< é›·è¾¾è¿œç‚¹ç»åº¦*/
-	double ori_latitude;	/**< é›·è¾¾è¿œç‚¹çº¬åº¦*/
-	double b_left;	/**< å·¦ä¾§è·¯åŸºæˆªè·*/
-	double b_right;	/**< å³ä¾§è·¯åŸºæˆªè·*/
-	double k;	/**< è½¦é“æ–œç‡*/
-	double kAti;	/**< æµ·æ‹”æ–œç‡*/
-	double bAti;	/**< æµ·æ‹”æˆªè·*/
-    int dirLaneFlag;    /**< è½¦é“ç›¸å¯¹äºæ¢æµ‹å™¨æ¥è¯´æ˜¯å»å‘ï¼Œå€¼ä¸º1ï¼Œåå‘ï¼Œå€¼ä¸º-1*/
-    int dirLane2EastFlage; /**< æ ‡å®šè½¦è¾†çš„ä¸œå‘é€Ÿåº¦ä¸ºè´Ÿï¼Œå€¼ä¸º1ï¼Œ å¦åˆ™ï¼Œå€¼ä¸º-1*/
+	int n_Gap;	/**< È«ÌåÀ×´ïÊı¾İÖĞµÄÖ¡Êı*/
+	double theta2;	/**< ³µµÀÓëÀ×´ï×ø±êÏµÖ®¼äµÄ½Ç¶ÈÆ«²î*/
+	double cosTheta2;	/**< theta2ÓàÏÒÖµ*/
+	double sinTheta2;	/**< theta2ÕıÏÒÖµ*/
+	double theta0;	/**< ¾­Î³¶ÈÓë³µµÀÖ®¼äµÄ½Ç¶ÈÆ«²î*/
+	double latitudeMean;	/**< Æ½¾ùÎ³¶È*/
+	double ori_longitude;	/**< À×´ïÔ¶µã¾­¶È*/
+	double ori_latitude;	/**< À×´ïÔ¶µãÎ³¶È*/
+	double b_left;	/**< ×ó²àÂ·»ù½Ø¾à*/
+	double b_right;	/**< ÓÒ²àÂ·»ù½Ø¾à*/
+	double k;	/**< ³µµÀĞ±ÂÊ*/
+	double kAti;	/**< º£°ÎĞ±ÂÊ*/
+	double bAti;	/**< º£°Î½Ø¾à*/
+    int dirLaneFlag;    /**< ³µµÀÏà¶ÔÓÚÌ½²âÆ÷À´ËµÊÇÈ¥Ïò£¬ÖµÎª1£¬·´Ïò£¬ÖµÎª-1*/
+    int dirLane2EastFlage; /**< ±ê¶¨³µÁ¾µÄ¶«ÏòËÙ¶ÈÎª¸º£¬ÖµÎª1£¬ ·ñÔò£¬ÖµÎª-1*/
 
-	void init();	/**< åˆå§‹åŒ–ç¨‹åº*/
-	void run();		/**< ä¸»ç®—æ³•*/
-	void writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int RadarDataID, vector<res>& all_res, int data_idx, float maxCarLen);	/**< å†™ä¸‹å•æ¡ç»“æœ*/
-	vector<vector<double>> mapLane2Radar(vector<rtk>::iterator begin, vector<rtk>::iterator end, double meanY);	/**< åˆ›å»ºæ ‡å®šæ•°æ®ä¸é›·è¾¾æ•°æ®ä¹‹é—´çš„æ˜ å°„*/
-	void getCoordinate(double distLong, double distLati, double& longitude, double& latitude);	/**< æ ¹æ®æ¨ªè·çºµå‘è·ç¦»ä¸æ¨ªå‘è·ç¦»ï¼Œè·å¾—ç›¸åº”çš„ç»çº¬åº¦åæ ‡*/
+	void init();	/**< ³õÊ¼»¯³ÌĞò*/
+	void run();		/**< Ö÷Ëã·¨*/
+	void writeSingleResult(double nowT, int carUniqueId, double X_mean, double Y_mean, double carLat, double RadarHeight, double sp_mean, double RCS_mean, int RadarDataID, vector<res>& all_res, int data_idx, float maxCarLen);	/**< Ğ´ÏÂµ¥Ìõ½á¹û*/
+	vector<vector<double>> mapLane2Radar(vector<rtk>::iterator begin, vector<rtk>::iterator end, double meanY);	/**< ´´½¨±ê¶¨Êı¾İÓëÀ×´ïÊı¾İÖ®¼äµÄÓ³Éä*/
+	void getCoordinate(double distLong, double distLati, double& longitude, double& latitude);	/**< ¸ù¾İºá¾à×İÏò¾àÀëÓëºáÏò¾àÀë£¬»ñµÃÏàÓ¦µÄ¾­Î³¶È×ø±ê*/
 };
 
 extern Solution solution;
