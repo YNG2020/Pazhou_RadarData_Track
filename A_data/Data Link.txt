@@ -1,0 +1,11 @@
+数据获取链接
+百度网盘
+链接：https://pan.baidu.com/s/1L7Nm9vrL-iS2e1fE2JhzMg?pwd=l0rv
+提取码：l0rv
+
+夸克网盘
+链接：https://pan.quark.cn/s/4d6f3281ec8c
+提取码：5vRE
+
+链接数据为初赛A榜数据集及数据注释说明
+各渠道下载数据集内容一致，请选手选择自己需要的渠道进行下载
