@@ -86,31 +86,57 @@ int Radar::readRadarData(const std::string& RadarDataPath, std::vector<Radar>& R
     return frameCnt;
 }
 
-void res::writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<int>& carID_buffer) {
+void res::writeResult(const std::string& Path, std::vector<res>& Result, const std::vector<int>& carID_buffer, int dirLaneFlag) {
     std::ofstream outFile; // 创建一个输出文件流对象
     int cnt = 0;
     // 打开文件，如果文件不存在则创建
     outFile.open(Path);
-    for (auto& re : Result) {
-        if (re.Timestamp == 0)
-            break;
-        if (carID_buffer[re.Object_ID] <= 1)
-            continue;
-        outFile << std::fixed << std::setprecision(3) << re.Timestamp << ",";
-        outFile << re.Object_ID << ",";
-        outFile << re.Object_DistLong << ",";
-        outFile << re.Object_DistLat << ",";
-        outFile << re.Object_VeloLong << ",";
-        outFile << re.Object_VeloLat << ",";
-        outFile << re.Object_RCS << ",";
-        outFile << re.Object_Class << ",";
-        outFile << std::fixed << std::setprecision(11) << re.Object_Longitude << ",";
-        outFile << re.Object_Latitude << ",";
-        outFile << re.Object_Altitude << ",";
-        outFile << re.Object_parking << ",";
-        outFile << re.Object_retrograde << ",";
-        outFile << re.Object_overspeed;
-        outFile << "\n";
+    if (dirLaneFlag == -1) {
+        for (int i = Result.size() - 1; i >= 0; --i) {
+            auto& re = Result[i];
+            if (re.Timestamp == 0)
+                continue;
+            if (carID_buffer[re.Object_ID] <= 1)
+                continue;
+            outFile << std::fixed << std::setprecision(3) << re.Timestamp << ",";
+            outFile << re.Object_ID << ",";
+            outFile << re.Object_DistLong << ",";
+            outFile << re.Object_DistLat << ",";
+            outFile << re.Object_VeloLong << ",";
+            outFile << re.Object_VeloLat << ",";
+            outFile << re.Object_RCS << ",";
+            outFile << re.Object_Class << ",";
+            outFile << std::fixed << std::setprecision(11) << re.Object_Longitude << ",";
+            outFile << re.Object_Latitude << ",";
+            outFile << re.Object_Altitude << ",";
+            outFile << re.Object_parking << ",";
+            outFile << re.Object_retrograde << ",";
+            outFile << re.Object_overspeed;
+            outFile << "\n";
+        }
+    }
+    else {
+        for (auto& re : Result) {
+            if (re.Timestamp == 0)
+                break;
+            if (carID_buffer[re.Object_ID] <= 1)
+                continue;
+            outFile << std::fixed << std::setprecision(3) << re.Timestamp << ",";
+            outFile << re.Object_ID << ",";
+            outFile << re.Object_DistLong << ",";
+            outFile << re.Object_DistLat << ",";
+            outFile << re.Object_VeloLong << ",";
+            outFile << re.Object_VeloLat << ",";
+            outFile << re.Object_RCS << ",";
+            outFile << re.Object_Class << ",";
+            outFile << std::fixed << std::setprecision(11) << re.Object_Longitude << ",";
+            outFile << re.Object_Latitude << ",";
+            outFile << re.Object_Altitude << ",";
+            outFile << re.Object_parking << ",";
+            outFile << re.Object_retrograde << ",";
+            outFile << re.Object_overspeed;
+            outFile << "\n";
+        }
     }
     // 关闭文件流
     outFile.close();

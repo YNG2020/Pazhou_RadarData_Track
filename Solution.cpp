@@ -342,7 +342,22 @@ void Solution::run() {
     vector<res> all_res(n_radar_data / 10);         // 记录全体结果
     vector<float> maxCarsLen(n_radar_data / 10);    // 记录最大车长信息
     int carUniqueId = -1;
-    for (int cnt = 0; cnt < n_Gap; ++cnt) {
+    int cnt;
+    if (dirLaneFlag == -1)
+        cnt = n_Gap;
+    else
+        cnt = -1;
+    while (true) {
+        if (dirLaneFlag == -1) {
+            --cnt;
+            if (cnt == -1)
+                break;
+        }
+        else {
+            ++cnt;
+            if (cnt == n_Gap)
+                break;
+        }
         int frameStart = frameGapIdx[cnt];  // 当前帧的在雷达数据的起始位
         int nFrame = frameGapIdx[cnt + 1] - frameGapIdx[cnt]; // 该帧的帧数
         vector<int> OKIndex;
@@ -404,7 +419,7 @@ void Solution::run() {
                 if (BlockIndex[j]) {
                     ++j; continue;
                 }
-                if (std::abs(carSpeed - curFrameData[sortedIdx[j]].VeloRadial) / cosTheta2 > deltaT * carA) { // (deltaT在0.025~0.2之间)
+                if (std::abs(carSpeed - curFrameData[sortedIdx[j]].VeloRadial) / cosTheta2 > std::abs(deltaT * carA)) { // (deltaT在0.025~0.2之间)
                     ++j; continue;
                 }
                 if (std::abs(carDisLat - curFrameData[sortedIdx[j]].DistLat) > maxVarY) {
@@ -599,7 +614,7 @@ void Solution::run() {
             j = jStart + 1;
         }
     }
-    res::writeResult("result.csv", all_res, carID_buffer);
+    res::writeResult("result.csv", all_res, carID_buffer, dirLaneFlag);
 }
 
 // 写下单条结果
