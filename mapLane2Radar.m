@@ -120,7 +120,6 @@ function [LaneRadarTrack] = mapLane2Radar(RadarData, Lane, dirLaneFlag, meanY)
                     % if cnt == 1 || (RadarData(tmpDotIdx, 3) - LaneRadarTrack(LastOKIDX, 2))^2 + (RadarData(tmpDotIdx, 4) - LaneRadarTrack(LastOKIDX, 3))^2 < 25
                     if cnt == 1 || (RadarData(tmpDotIdx, 3) - predict_x)^2 + (RadarData(tmpDotIdx, 4) - predict_y)^2 < 25 && RadarData(tmpDotIdx, 6) > 0
                         OKFLAG = 1;
-                        FirSt = 1;
                         DotIdx = tmpDotIdx;
                         % 该部分用于检测径向速度相近且位置接近的雷达数据
                         [all_radar_x(cnt, :), all_radar_y(cnt, :), sp_mean] = find_relate_data(i, j, RadarData, radarFrameTimeIdx, Lane2FrameIdx, DotIdx, n_Frame, idx, LaneRadarTrack, LastOKIDX);

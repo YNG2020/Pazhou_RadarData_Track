@@ -77,7 +77,23 @@ tracer_pointer = 0; % tracer_pointer永远指向buffer中的最后一个有效�
 data_idx = 0;
 all_res = zeros(n_radar_data, 16);
 carUniqueId = -1;
-for cnt = 1 : n_Gap
+if dirLaneFlag == -1
+    cnt = n_Gap + 1;
+else
+    cnt = 0;
+end
+while 1
+    if dirLaneFlag == -1
+        cnt = cnt - 1;
+        if cnt == 0
+            break;
+        end
+    else
+        cnt = cnt + 1;
+        if cnt == n_Gap + 1
+            break;
+        end
+    end
     frameStart = frameGapIdx(cnt);  % 当前帧的在雷达数据的起始位
     nFrame = frameGapIdx(cnt + 1) - frameGapIdx(cnt);   % 该帧的帧数
     tmpIndex = zeros(nFrame, 1);
@@ -119,7 +135,7 @@ for cnt = 1 : n_Gap
             if BlockIndex(j)
                 j = j + 1; continue;
             end
-            if abs(carSpeed - curFrameData(j, 5)) / cosTheta2 > deltaT * carA %(deltaT在0.025~0.2之间)
+            if abs(carSpeed - curFrameData(j, 5)) / cosTheta2 > abs(deltaT * carA) %(deltaT在0.025~0.2之间)
                 j = j + 1; continue;
             end
             if abs(carDisLat - curFrameData(j, 4)) > maxVarY
@@ -315,6 +331,9 @@ end
 
 final_data = all_res(1 : data_idx, 1:14);
 final_data = final_data(removeFlag == 0, :);
+if dirLaneFlag == -1
+    final_data = flip(final_data, 1);
+end
 final_data2 = all_res(1 : data_idx, :);
 final_data2 = final_data2(removeFlag == 0, :);
 % writematrix(final_data, 'result.csv')
